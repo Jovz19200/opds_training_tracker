@@ -1,12 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    turbo: {
-      rules: {
-        '*.css': ['@tailwindcss/postcss'],
-      },
-    },
-  },
+  // Removed the experimental turbo configuration
 }
 
 module.exports = nextConfig 

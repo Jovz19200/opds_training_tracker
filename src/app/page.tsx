@@ -1,3 +1,4 @@
+import { Footer } from "@/components/footer"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -6,11 +7,11 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         {/* Hero Section */}
-        <section className="space-y-6 pb-8 pt-6 md:pb-12  md:pt-10 lg:py-32">
-          <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center">
-            <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
+        <section className="space-y-6 pb-8 pt-6 md:pb-12  md:pt-10 lg:py-32 sm:px-6 px-4">
+          <div className="container flex mx-auto max-w-7xl flex-col items-center gap-4 text-center">
+            <h1 className="font-heading text-3xl max-w-[64rem] sm:text-5xl md:text-6xl lg:text-7xl">
               Streamline Training Management for{" "}
               <span className="text-primary">OPDs</span>
             </h1>
@@ -18,7 +19,7 @@ export default function Home() {
               Enhance stakeholder development with our comprehensive training management system. 
               Automate processes, track progress, and drive organizational growth.
             </p>
-            <div className="space-x-4">
+            <div className="gap-3 flex flex-col w-full sm:w-auto sm:flex-row">
               <Button asChild size="lg">
                 <Link href="/register">Get Started</Link>
               </Button>
@@ -30,38 +31,39 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="container space-y-6 bg-slate-50 py-8 dark:bg-slate-900 md:py-12 lg:py-24">
-          <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-            <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
-              Key Features
-            </h2>
-            <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              Discover how OTMS can transform your training management process
+        <section className="space-y-6 bg-slate-50 dark:bg-black w-full md:py-12 lg:py-24">
+  <div className="mx-auto px-4 flex max-w-[58rem] flex-col items-center space-y-4 text-center">
+    <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
+      Key Features
+    </h2>
+    <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
+      Discover how OTMS can transform your training management process
+    </p>
+  </div>
+  <div className="mx-auto grid justify-center gap-6 px-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-3">
+    {features.map((feature) => (
+      <div
+        key={feature.title}
+        className="relative overflow-hidden rounded-xl border border-gray-800 dark:border-slate-800/50 bg-background p-2 dark:bg-slate-900/10 backdrop-blur-sm dark:backdrop-blur-md hover:dark:border-slate-700/50 transition-colors"
+      >
+        <div className="flex h-[180px] flex-col justify-between rounded-lg p-6">
+          <div className="space-y-2">
+            <h3 className="font-bold text-lg">{feature.title}</h3>
+            <p className="text-sm text-muted-foreground">
+              {feature.description}
             </p>
           </div>
-          <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-3">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="relative overflow-hidden rounded-lg border bg-background p-2"
-              >
-                <div className="flex h-[180px] flex-col justify-between rounded-md p-6">
-                  <div className="space-y-2">
-                    <h3 className="font-bold">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        </div>
+        <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-slate-900/80 dark:via-slate-900/20 dark:to-transparent pointer-events-none"></div>
+      </div>
+    ))}
+  </div>
+</section>
 
         {/* CTA Section */}
-        <section className="container py-8 md:py-12 lg:py-24">
-          <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-            <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
+        <section className=" py-8 md:py-12 lg:py-24 w-full">
+          <div className="container flex mx-auto max-w-7xl flex-col items-center space-y-4 text-center">
+            <h2 className="font-heading max-w-[58rem] text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
               Ready to Transform Your Training Management?
             </h2>
             <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
@@ -73,6 +75,7 @@ export default function Home() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   )
 }
