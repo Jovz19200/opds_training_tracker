@@ -17,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 
 export default function DashboardPage() {
-  // This would come from authentication in a real app
+  // This would come 
   const isLoggedIn = true
   
   return (
