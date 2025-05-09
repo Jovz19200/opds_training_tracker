@@ -2,12 +2,20 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle, EyeIcon, EyeOffIcon, Mail, UserPlus } from "lucide-react"
+import { register } from "@/redux/api/loginApiSlice"
+import type { AppDispatch, RootState } from "@/redux/store"
 
 export default function RegisterPage() {
+  const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
+  const { loading, error } = useSelector((state: RootState) => state.login)
+  
   const [formData, setFormData] = useState({
     fullName: "",
     organization: "",
@@ -17,7 +25,6 @@ export default function RegisterPage() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [passwordError, setPasswordError] = useState("")
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,20 +46,21 @@ export default function RegisterPage() {
     }
   }
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (passwordError) return
     if (!agreeTerms) return
     
-    setIsLoading(true)
+    const result = await dispatch(register({
+      name: formData.fullName,
+      email: formData.email,
+      password: formData.password
+    }))
     
-    // Simulate registration request
-    setTimeout(() => {
-      // Here you would handle the actual registration logic
-      setIsLoading(false)
-      // Redirect to verification page or show error
-    }, 1500)
+    if (register.fulfilled.match(result)) {
+      router.push("/dashboard")
+    }
   }
   
   return (
@@ -65,6 +73,12 @@ export default function RegisterPage() {
               <h1 className="text-2xl font-bold">Create an Account</h1>
               <p className="text-muted-foreground mt-1">Join OTMS to manage your training programs</p>
             </div>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-500 rounded-md text-sm">
+                {error}
+              </div>
+            )}
             
             <Button 
               variant="outline" 
@@ -214,9 +228,9 @@ export default function RegisterPage() {
               <Button 
                 type="submit" 
                 className="w-full flex items-center justify-center"
-                disabled={isLoading || !agreeTerms || !!passwordError}
+                disabled={loading || !agreeTerms || !!passwordError}
               >
-                {isLoading ? (
+                {loading ? (
                   <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <>

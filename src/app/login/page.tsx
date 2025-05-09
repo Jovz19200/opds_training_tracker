@@ -2,28 +2,32 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle, EyeIcon, EyeOffIcon, LogIn } from "lucide-react"
+import { login } from "@/redux/api/loginApiSlice"
+import type { AppDispatch, RootState } from "@/redux/store"
 
 export default function LoginPage() {
+  const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
+  const { loading, error } = useSelector((state: RootState) => state.login)
+  
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     
-    // Simulate login request
-    setTimeout(() => {
-      // Here you would handle the actual login logic
-      setIsLoading(false)
-      // Redirect to dashboard or show error
-    }, 1500)
+    const result = await dispatch(login({ email, password }))
+    if (login.fulfilled.match(result)) {
+      router.push("/traineedashboard")
+    }
   }
   
   return (
@@ -36,6 +40,12 @@ export default function LoginPage() {
               <h1 className="text-2xl font-bold">Welcome Back</h1>
               <p className="text-muted-foreground mt-1">Sign in to your OTMS account</p>
             </div>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-500 rounded-md text-sm">
+                {error}
+              </div>
+            )}
             
             <Button 
               variant="outline" 
@@ -140,9 +150,9 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 className="w-full flex items-center justify-center"
-                disabled={isLoading}
+                disabled={loading}
               >
-                {isLoading ? (
+                {loading ? (
                   <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <>
