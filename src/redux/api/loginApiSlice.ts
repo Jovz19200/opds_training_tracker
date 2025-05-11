@@ -15,18 +15,33 @@ interface LoginPayload {
 
 interface LoginResponse {
   token: string;
+  user: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 interface RegisterPayload {
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  name: string;
+  organization: string;
 }
+
+const getStoredUserInfo = () => {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem("userInfo");
+    return stored ? JSON.parse(stored) : {};
+  }
+  return {};
+};
 
 const initialState: LoginState = {
   loading: false,
   error: null,
-  userInfo: {},
+  userInfo: getStoredUserInfo(),
 };
 
 export const login = createAsyncThunk<
@@ -48,7 +63,7 @@ export const register = createAsyncThunk<
   { rejectValue: { message: string } }
 >("register", async (payload, { rejectWithValue }) => {
   try {
-    const response = await axios.post("/users/register", payload);
+    const response = await axios.post("/auth/register", payload);
     return response.data;
   } catch (error: any) {
     return rejectWithValue(error.response?.data);
@@ -73,7 +88,9 @@ const loginApiSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
+        state.userInfo = action.payload.user;
         localStorage.setItem("accessToken", action.payload.token);
+        localStorage.setItem("userInfo", JSON.stringify(action.payload.user));
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -85,7 +102,9 @@ const loginApiSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
+        state.userInfo = action.payload.user;
         localStorage.setItem("accessToken", action.payload.token);
+        localStorage.setItem("userInfo", JSON.stringify(action.payload.user));
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -98,5 +117,7 @@ const loginApiSlice = createSlice({
       });
   },
 });
+
+
 
 export default loginApiSlice.reducer;

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
@@ -9,15 +9,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle, EyeIcon, EyeOffIcon, Mail, UserPlus } from "lucide-react"
 import { register } from "@/redux/api/loginApiSlice"
+import { fetchOrganizations } from "@/redux/api/organizationApiSlice"
 import type { AppDispatch, RootState } from "@/redux/store"
 
 export default function RegisterPage() {
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
   const { loading, error } = useSelector((state: RootState) => state.login)
+  const { organizations, loading: orgLoading } = useSelector((state: RootState) => state.organizations)
   
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     organization: "",
     email: "",
     password: "",
@@ -27,7 +30,11 @@ export default function RegisterPage() {
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [passwordError, setPasswordError] = useState("")
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    dispatch(fetchOrganizations())
+  }, [dispatch])
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     
@@ -53,13 +60,15 @@ export default function RegisterPage() {
     if (!agreeTerms) return
     
     const result = await dispatch(register({
-      name: formData.fullName,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
       email: formData.email,
-      password: formData.password
+      password: formData.password,
+      organization: formData.organization
     }))
     
     if (register.fulfilled.match(result)) {
-      router.push("/dashboard")
+      router.push("/traineedashboard")
     }
   }
   
@@ -117,14 +126,29 @@ export default function RegisterPage() {
             
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <label htmlFor="fullName" className="text-sm font-medium">
-                  Full Name
+                <label htmlFor="firstName" className="text-sm font-medium">
+                  First Name
                 </label>
                 <Input 
-                  id="fullName" 
-                  name="fullName"
-                  placeholder="Enter your full name"
-                  value={formData.fullName}
+                  id="firstName" 
+                  name="firstName"
+                  placeholder="Enter your first name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="lastName" className="text-sm font-medium">
+                  Last Name
+                </label>
+                <Input 
+                  id="lastName" 
+                  name="lastName"
+                  placeholder="Enter your last name"
+                  value={formData.lastName}
                   onChange={handleChange}
                   required
                   className="w-full"
@@ -135,15 +159,24 @@ export default function RegisterPage() {
                 <label htmlFor="organization" className="text-sm font-medium">
                   Organization
                 </label>
-                <Input 
-                  id="organization" 
+                <select
+                  id="organization"
                   name="organization"
-                  placeholder="Enter your organization name"
                   value={formData.organization}
                   onChange={handleChange}
                   required
-                  className="w-full"
-                />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Select an organization</option>
+                  {organizations.map((org) => (
+                    <option key={org._id} value={org._id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+                {orgLoading && (
+                  <p className="text-sm text-muted-foreground">Loading organizations...</p>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -191,24 +224,6 @@ export default function RegisterPage() {
                 </div>
               </div>
               
-              {/* <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirm Password
-                </label>
-                <Input 
-                  id="confirmPassword" 
-                  name="confirmPassword"
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className={`w-full ${passwordError ? "border-red-500" : ""}`}
-                />
-                {passwordError && (
-                  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
-                )}
-              </div> */}
               
               <div className="flex items-center">
                 <div 
