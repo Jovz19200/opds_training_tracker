@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { useRouter } from "next/navigation"
 import { ThemeToggle } from "./theme-toggle"
 import { Button } from "./ui/button"
 import { Menu, X, Bell, User, Settings, LogOut, LayoutDashboard } from "lucide-react"
@@ -12,10 +14,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { logout } from "@/redux/api/loginApiSlice"
+import type { AppDispatch, RootState } from "@/redux/store"
 
-export function Navbar({ isLoggedIn = false }) {
+export function Navbar() {
+  const dispatch = useDispatch<AppDispatch>()
+  const router = useRouter()
+  const { userInfo } = useSelector((state: RootState) => state.login)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(3)
+
+  const handleLogout = () => {
+    dispatch(logout())
+    router.push("/")
+  }
+
+  const isLoggedIn = userInfo && userInfo.email ? true : false;
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -47,7 +62,7 @@ export function Navbar({ isLoggedIn = false }) {
           </Link>
           {isLoggedIn && (
             <Link
-              href="/dashboard"
+              href="/traineedashboard"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
               Dashboard
@@ -55,9 +70,8 @@ export function Navbar({ isLoggedIn = false }) {
           )}
         </nav>
         
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center space-x-4">
           {isLoggedIn ? (
-            // Logged in controls
             <>
               <div className="relative">
                 <Button variant="ghost" size="icon" className="text-foreground/60 hover:text-foreground/80">
@@ -84,15 +98,15 @@ export function Navbar({ isLoggedIn = false }) {
                       <User className="h-5 w-5 text-foreground/80" />
                     </div>
                     <div className="flex flex-col space-y-0.5">
-                      <p className="text-sm font-medium">John Doe</p>
-                      <p className="text-xs text-muted-foreground">john@opd.org</p>
+                      <p className="text-sm font-medium">{userInfo?.firstName} {userInfo?.lastName}</p>
+                      <p className="text-xs text-muted-foreground">{userInfo?.email}</p>
                     </div>
                   </div>
                   
                   <DropdownMenuSeparator />
                   
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="cursor-pointer w-full flex items-center">
+                    <Link href="/traineedashboard" className="cursor-pointer w-full flex items-center">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </Link>
@@ -114,17 +128,14 @@ export function Navbar({ isLoggedIn = false }) {
                   
                   <DropdownMenuSeparator />
                   
-                  <DropdownMenuItem asChild>
-                    <Link href="/logout" className="cursor-pointer w-full flex items-center">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Logout</span>
-                    </Link>
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer w-full flex items-center text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
           ) : (
-            // Not logged in controls
             <div className="hidden sm:flex space-x-2">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/login">Login</Link>
@@ -175,7 +186,7 @@ export function Navbar({ isLoggedIn = false }) {
             
             {isLoggedIn && (
               <Link
-                href="/dashboard"
+                href="/traineedashboard"
                 className="px-3 py-2 rounded-md hover:bg-muted transition-colors text-sm font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -195,8 +206,8 @@ export function Navbar({ isLoggedIn = false }) {
                     <User size={14} />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">John Doe</p>
-                    <p className="text-xs text-muted-foreground">john@opd.org</p>
+                    <p className="text-sm font-medium">{userInfo?.firstName} {userInfo?.lastName}</p>
+                    <p className="text-xs text-muted-foreground">{userInfo?.email}</p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" asChild className="justify-start">
@@ -209,18 +220,18 @@ export function Navbar({ isLoggedIn = false }) {
                     <Settings className="mr-2 h-4 w-4" /> Settings
                   </Link>
                 </Button>
-                <Button variant="default" size="sm" asChild className="justify-start">
-                  <Link href="/logout" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="default" size="sm" asChild className="justify-start" onClick={handleLogout}>
+                  <Link href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
                     <LogOut className="mr-2 h-4 w-4" /> Logout
                   </Link>
                 </Button>
               </div>
             ) : (
               <div className="flex space-x-2 px-3 pt-2">
-                <Button variant="outline" size="sm" asChild className="">
+                <Button variant="outline" size="sm" asChild>
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
                 </Button>
-                <Button size="sm" asChild className="">
+                <Button size="sm" asChild>
                   <Link href="/register" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
                 </Button>
               </div>

@@ -1,6 +1,7 @@
 // src/redux/api/api.ts
 import axios from "axios";
-console.log(process.env.PORT);
+import Cookies from 'js-cookie';
+
 const api = axios.create({
   baseURL: process.env.OTMS_BN_LOCAL_URL || "http://localhost:5000/api",
   headers: {
@@ -12,7 +13,7 @@ console.log(process.env.OTMS_BN_LOCAL_URL);
 // Add request interceptor for authentication
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
+    const token = Cookies.get("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
