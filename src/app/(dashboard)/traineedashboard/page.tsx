@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,14 +16,28 @@ import {
   Download
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import OTMSLoader from "@/components/OTMSLoader"
 
 export default function DashboardPage() {
-  // This would come 
-  const isLoggedIn = true
-  
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate data fetching/loading
+    const timer = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <OTMSLoader />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar isLoggedIn={isLoggedIn} />
+      <Navbar />
       <main className="flex-1 py-8">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">

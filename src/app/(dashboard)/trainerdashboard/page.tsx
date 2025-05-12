@@ -17,11 +17,11 @@ import {
 import { Badge } from "@/components/ui/badge"
 
 export default function TrainerDashboardPage() {
-  const isLoggedIn = true
+  
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar isLoggedIn={isLoggedIn} />
+      <Navbar />
       <main className="flex-1 py-8">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">

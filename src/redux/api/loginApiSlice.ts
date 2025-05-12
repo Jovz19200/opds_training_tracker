@@ -1,6 +1,7 @@
 // src/redux/api/loginApiSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "./api";
+import Cookies from 'js-cookie';
 
 interface LoginState {
   loading: boolean;
@@ -19,6 +20,7 @@ interface LoginResponse {
     firstName: string;
     lastName: string;
     email: string;
+    role: 'trainee' | 'trainer' | 'admin';
   };
 }
 
@@ -32,7 +34,7 @@ interface RegisterPayload {
 
 const getStoredUserInfo = () => {
   if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem("userInfo");
+    const stored = Cookies.get("userInfo");
     return stored ? JSON.parse(stored) : {};
   }
   return {};
@@ -71,8 +73,8 @@ export const register = createAsyncThunk<
 });
 
 export const logout = createAsyncThunk("logout", async () => {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("userInfo");
+  Cookies.remove("accessToken");
+  Cookies.remove("userInfo");
   return null;
 });
 
@@ -89,8 +91,17 @@ const loginApiSlice = createSlice({
         state.loading = false;
         state.error = null;
         state.userInfo = action.payload.user;
-        localStorage.setItem("accessToken", action.payload.token);
-        localStorage.setItem("userInfo", JSON.stringify(action.payload.user));
+        // Set cookies with security options
+        Cookies.set("accessToken", action.payload.token, {
+          secure: true,
+          sameSite: 'strict',
+          expires: 7 // 7 days
+        });
+        Cookies.set("userInfo", JSON.stringify(action.payload.user), {
+          secure: true,
+          sameSite: 'strict',
+          expires: 7 // 7 days
+        });
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -103,8 +114,17 @@ const loginApiSlice = createSlice({
         state.loading = false;
         state.error = null;
         state.userInfo = action.payload.user;
-        localStorage.setItem("accessToken", action.payload.token);
-        localStorage.setItem("userInfo", JSON.stringify(action.payload.user));
+        // Set cookies with security options
+        Cookies.set("accessToken", action.payload.token, {
+          secure: true,
+          sameSite: 'strict',
+          expires: 7 // 7 days
+        });
+        Cookies.set("userInfo", JSON.stringify(action.payload.user), {
+          secure: true,
+          sameSite: 'strict',
+          expires: 7 // 7 days
+        });
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -117,7 +137,5 @@ const loginApiSlice = createSlice({
       });
   },
 });
-
-
 
 export default loginApiSlice.reducer;
