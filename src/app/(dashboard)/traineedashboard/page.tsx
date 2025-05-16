@@ -1,6 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { fetchTrainings } from "@/redux/api/trainingApiSlice";
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,13 +22,12 @@ import { Badge } from "@/components/ui/badge"
 import OTMSLoader from "@/components/OTMSLoader"
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+  const { trainings, loading } = useSelector((state: RootState) => state.trainings);
 
   useEffect(() => {
-    // Simulate data fetching/loading
-    const timer = setTimeout(() => setLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+    dispatch(fetchTrainings());
+  }, [dispatch]);
 
   if (loading) {
     return (
@@ -43,14 +45,14 @@ export default function DashboardPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight">My Learning Dashboard</h1>
-              <p className="text-muted-foreground">Welcome back, John Doe!</p>
+              <p className="text-muted-foreground">Welcome back!</p>
             </div>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm">
                 <Calendar className="mr-2 h-4 w-4" /> View Calendar
               </Button>
               <Button size="sm">
-                <BookOpen className="mr-2 h-4 w-4" /> Browse Courses
+                <BookOpen className="mr-2 h-4 w-4" /> Browse Trainings
               </Button>
             </div>
           </div>
@@ -100,76 +102,48 @@ export default function DashboardPage() {
           </div>
           
           {/* Tabs */}
-          <Tabs defaultValue="inprogress" className="space-y-4">
+          <Tabs defaultValue="upcoming" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="inprogress">In Progress</TabsTrigger>
               <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
               <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="materials">Learning Materials</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="inprogress" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {inProgressCourses.map((course, index) => (
-                  <Card key={index}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardTitle>{course.title}</CardTitle>
-                        <Badge variant={getBadgeVariant(course.type)}>{course.type}</Badge>
-                      </div>
-                      <CardDescription>{course.instructor}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">Progress:</span>
-                        <span className="text-sm font-medium">{course.progress}%</span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full mb-4">
-                        <div 
-                          className="h-full bg-primary rounded-full" 
-                          style={{ width: `${course.progress}%` }}
-                        ></div>
-                      </div>
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm text-muted-foreground">Next Session:</span>
-                        <span className="text-sm font-medium">{course.nextSession}</span>
-                      </div>
-                      <Button variant="default" size="sm" className="w-full">
-                        Continue Learning
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
             
             <TabsContent value="upcoming" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {upcomingCourses.map((course, index) => (
-                  <Card key={index}>
+                {trainings.filter(t => t.status === "scheduled").map((training, index) => (
+                  <Card key={training._id || index}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <CardTitle>{course.title}</CardTitle>
-                        <Badge variant={getBadgeVariant(course.type)}>{course.type}</Badge>
+                        <CardTitle>{training.title}</CardTitle>
+                        {training.thumbnail?.url && (
+                          <img src={training.thumbnail.url} alt={training.title} className="h-12 w-12 object-cover rounded" />
+                        )}
                       </div>
-                      <CardDescription>{course.instructor}</CardDescription>
+                      <CardDescription>{training.description}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">Start Date:</span>
-                        <span className="text-sm font-medium">{course.startDate}</span>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Instructor:</span> {training.instructor?.firstName} {training.instructor?.lastName}
                       </div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">Duration:</span>
-                        <span className="text-sm font-medium">{course.duration}</span>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Start:</span> {new Date(training.startDate).toLocaleString()}
                       </div>
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm text-muted-foreground">Location:</span>
-                        <span className="text-sm font-medium">{course.location}</span>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">End:</span> {new Date(training.endDate).toLocaleString()}
                       </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" className="flex-1">View Details</Button>
-                        <Button variant="default" size="sm" className="flex-1">Add to Calendar</Button>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Location:</span> {training.isVirtual ? (
+                          <a href={training.virtualMeetingLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">Virtual Link</a>
+                        ) : (
+                          training.location
+                        )}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Capacity:</span> {training.capacity}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Accessibility:</span> {training.accessibilityFeatures?.join(", ") || "None"}
                       </div>
                     </CardContent>
                   </Card>
@@ -177,61 +151,87 @@ export default function DashboardPage() {
               </div>
             </TabsContent>
             
-            <TabsContent value="completed">
-              <div className="rounded-lg border">
-                {completedCourses.length > 0 ? (
-                  <div className="divide-y">
-                    {completedCourses.map((course, index) => (
-                      <div key={index} className="flex flex-col md:flex-row md:items-center justify-between p-4">
-                        <div className="mb-4 md:mb-0">
-                          <div className="flex items-center">
-                            <h3 className="font-medium">{course.title}</h3>
-                            <Badge variant={getBadgeVariant(course.type)} className="ml-2">{course.type}</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">Completed: {course.completionDate}</p>
-                        </div>
-                        <div className="flex items-center flex-wrap gap-2">
-                          <span className="text-sm font-medium mr-2">Score: {course.score}%</span>
-                          <Button variant="outline" size="sm" className="flex items-center">
-                            <Award className="mr-2 h-4 w-4" /> Certificate
-                          </Button>
-                          <Button variant="ghost" size="sm" className="flex items-center">
-                            <FileText className="mr-2 h-4 w-4" /> Feedback
-                          </Button>
-                        </div>
+            <TabsContent value="scheduled" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {trainings.filter(t => t.status === "scheduled").map((training, index) => (
+                  <Card key={training._id || index}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle>{training.title}</CardTitle>
+                        {training.thumbnail?.url && (
+                          <img src={training.thumbnail.url} alt={training.title} className="h-12 w-12 object-cover rounded" />
+                        )}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center">
-                    <p className="text-muted-foreground">You haven't completed any courses yet.</p>
-                  </div>
-                )}
+                      <CardDescription>{training.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Instructor:</span> {training.instructor?.firstName} {training.instructor?.lastName}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Start:</span> {new Date(training.startDate).toLocaleString()}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">End:</span> {new Date(training.endDate).toLocaleString()}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Location:</span> {training.isVirtual ? (
+                          <a href={training.virtualMeetingLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">Virtual Link</a>
+                        ) : (
+                          training.location
+                        )}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Capacity:</span> {training.capacity}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Accessibility:</span> {training.accessibilityFeatures?.join(", ") || "None"}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </TabsContent>
             
-            <TabsContent value="materials">
-              <div className="rounded-lg border">
-                <div className="p-4 bg-slate-50 dark:bg-slate-900">
-                  <h3 className="font-medium mb-1">My Learning Materials</h3>
-                  <p className="text-sm text-muted-foreground">Access course materials and resources</p>
-                </div>
-                <div className="divide-y">
-                  {learningMaterials.map((material, index) => (
-                    <div key={index} className="flex flex-col md:flex-row md:items-center justify-between p-4">
-                      <div className="mb-3 md:mb-0">
-                        <h3 className="font-medium">{material.title}</h3>
-                        <p className="text-sm text-muted-foreground">{material.course}</p>
+            <TabsContent value="completed" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {trainings.filter(t => t.status === "completed").map((training, index) => (
+                  <Card key={training._id || index}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle>{training.title}</CardTitle>
+                        {training.thumbnail?.url && (
+                          <img src={training.thumbnail.url} alt={training.title} className="h-12 w-12 object-cover rounded" />
+                        )}
                       </div>
-                      <div className="flex items-center">
-                        <span className="text-sm text-muted-foreground mr-4">{material.type} • {material.size}</span>
-                        <Button variant="outline" size="sm" className="flex items-center">
-                          <Download className="mr-2 h-4 w-4" /> Download
-                        </Button>
+                      <CardDescription>{training.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Instructor:</span> {training.instructor?.firstName} {training.instructor?.lastName}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Start:</span> {new Date(training.startDate).toLocaleString()}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">End:</span> {new Date(training.endDate).toLocaleString()}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Location:</span> {training.isVirtual ? (
+                          <a href={training.virtualMeetingLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">Virtual Link</a>
+                        ) : (
+                          training.location
+                        )}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Capacity:</span> {training.capacity}
+                      </div>
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Accessibility:</span> {training.accessibilityFeatures?.join(", ") || "None"}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </TabsContent>
           </Tabs>
@@ -243,14 +243,14 @@ export default function DashboardPage() {
               <Button variant="ghost" size="sm">View All</Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {recommendedCourses.map((course, index) => (
+              {trainings.map((course, index) => (
                 <Card key={index} className="relative overflow-hidden border dark:border-slate-800 bg-background p-2 dark:bg-slate-900/10 backdrop-blur-sm dark:backdrop-blur-md hover:dark:border-slate-700/50 transition-colors">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <CardTitle>{course.title}</CardTitle>
-                      <Badge variant={getBadgeVariant(course.type)}>{course.type}</Badge>
+                      <Badge variant={getBadgeVariant(course.title)}>{course.title}</Badge>
                     </div>
-                    <CardDescription>{course.instructor}</CardDescription>
+                    <CardDescription>{course.instructor.firstName}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between items-center mb-2">
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-sm text-muted-foreground">Level:</span>
-                      <span className="text-sm font-medium">{course.level}</span>
+                      <span className="text-sm font-medium">{course.status}</span>
                     </div>
                     <Button variant="outline" size="sm" className="w-full">Learn More</Button>
                   </CardContent>
@@ -289,120 +289,3 @@ function getBadgeVariant(type: string) {
       return "default";
   }
 }
-
-// Sample data
-const inProgressCourses = [
-  {
-    title: "Digital Accessibility Training",
-    instructor: "Instructor: Sarah Johnson",
-    type: "Workshop",
-    progress: 65,
-    nextSession: "Tomorrow, 10:00 AM"
-  },
-  {
-    title: "Communication Strategies",
-    instructor: "Instructor: Michael Ndagijimana",
-    type: "Online",
-    progress: 30,
-    nextSession: "Friday, 2:00 PM"
-  }
-];
-
-const upcomingCourses = [
-  {
-    title: "Inclusive Design Principles",
-    instructor: "Instructor: David Mugisha",
-    type: "Workshop",
-    startDate: "June 15, 2025",
-    duration: "3 days",
-    location: "Conference Room A"
-  },
-  {
-    title: "Project Management Basics",
-    instructor: "Instructor: Emma Uwase",
-    type: "Online",
-    startDate: "June 22, 2025",
-    duration: "4 weeks",
-    location: "Virtual (Teams)"
-  },
-  {
-    title: "Career Development Workshop",
-    instructor: "Instructor: Pierre Hakizimana",
-    type: "Workshop",
-    startDate: "June 28, 2025",
-    duration: "1 day",
-    location: "Training Center"
-  }
-];
-
-const completedCourses = [
-  {
-    title: "Introduction to Web Accessibility",
-    type: "Workshop",
-    completionDate: "May 15, 2025",
-    score: 92
-  },
-  {
-    title: "Disability Inclusion Training",
-    type: "Online",
-    completionDate: "April 22, 2025",
-    score: 88
-  },
-  {
-    title: "Assistive Technology Workshop",
-    type: "Workshop",
-    completionDate: "March 10, 2025",
-    score: 95
-  }
-];
-
-const learningMaterials = [
-  {
-    title: "Web Accessibility Guidelines Handbook",
-    course: "Introduction to Web Accessibility",
-    type: "PDF",
-    size: "2.5 MB"
-  },
-  {
-    title: "Communication Strategies Slides",
-    course: "Communication Strategies",
-    type: "PowerPoint",
-    size: "5.1 MB"
-  },
-  {
-    title: "Assistive Technology Demo Videos",
-    course: "Assistive Technology Workshop",
-    type: "Video",
-    size: "45 MB"
-  },
-  {
-    title: "Disability Inclusion Best Practices",
-    course: "Disability Inclusion Training",
-    type: "PDF",
-    size: "1.8 MB"
-  }
-];
-
-const recommendedCourses = [
-  {
-    title: "Leadership Skills for OPD Professionals",
-    instructor: "Instructor: Jean Bizimana",
-    type: "Workshop",
-    duration: "2 days",
-    level: "Intermediate"
-  },
-  {
-    title: "Digital Marketing for Non-profits",
-    instructor: "Instructor: Marie Mukamana",
-    type: "Online",
-    duration: "3 weeks",
-    level: "Beginner"
-  },
-  {
-    title: "Grant Writing Essentials",
-    instructor: "Instructor: Paul Nkusi",
-    type: "Self-paced",
-    duration: "4 weeks",
-    level: "Advanced"
-  }
-];
