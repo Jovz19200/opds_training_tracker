@@ -2,14 +2,15 @@
 import axios from "axios";
 import Cookies from 'js-cookie';
 
+const base_URL =  process.env.NEXT_PUBLIC_OTMS_URL;
+
 const api = axios.create({
-  baseURL: process.env.OTMS_BN_LOCAL_URL || "http://localhost:5000/api",
+  baseURL: base_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-console.log(process.env.OTMS_BN_LOCAL_URL);
 // Add request interceptor for authentication
 api.interceptors.request.use(
   (config) => {

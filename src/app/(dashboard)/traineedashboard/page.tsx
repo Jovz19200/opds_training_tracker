@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { fetchTrainings } from "@/redux/api/trainingApiSlice";
@@ -24,6 +24,7 @@ import OTMSLoader from "@/components/OTMSLoader"
 export default function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { trainings, loading } = useSelector((state: RootState) => state.trainings);
+  const [selectedTraining, setSelectedTraining] = useState<any | null>(null);
 
   useEffect(() => {
     dispatch(fetchTrainings());
@@ -36,6 +37,36 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const renderTrainingCard = (training: any) => (
+    <div
+      key={training._id}
+      className="bg-white dark:bg-slate-900 shadow-lg rounded-lg overflow-hidden flex flex-col cursor-pointer transition-transform hover:scale-[1.02]"
+      style={{ border: "none" }}
+      onClick={() => setSelectedTraining(training)}
+    >
+      {training.thumbnail?.url && (
+        <img
+          src={training.thumbnail.url}
+          alt={training.title}
+          className="w-full h-40 object-cover"
+        />
+      )}
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <h2 className="text-lg font-bold mb-1 truncate" title={training.title}>
+          {training.title}
+        </h2>
+        <p className="text-sm text-muted-foreground mb-2">
+          {training.description?.length > 30
+            ? training.description.slice(0, 15) + "..."
+            : training.description}
+        </p>
+        <div className="mt-auto pt-2 text-xs text-muted-foreground font-medium">
+          By {training.instructor?.firstName} {training.instructor?.lastName}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -110,128 +141,20 @@ export default function DashboardPage() {
             </TabsList>
             
             <TabsContent value="upcoming" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {trainings.filter(t => t.status === "scheduled").map((training, index) => (
-                  <Card key={training._id || index}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardTitle>{training.title}</CardTitle>
-                        {training.thumbnail?.url && (
-                          <img src={training.thumbnail.url} alt={training.title} className="h-12 w-12 object-cover rounded" />
-                        )}
-                      </div>
-                      <CardDescription>{training.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Instructor:</span> {training.instructor?.firstName} {training.instructor?.lastName}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Start:</span> {new Date(training.startDate).toLocaleString()}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">End:</span> {new Date(training.endDate).toLocaleString()}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Location:</span> {training.isVirtual ? (
-                          <a href={training.virtualMeetingLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">Virtual Link</a>
-                        ) : (
-                          training.location
-                        )}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Capacity:</span> {training.capacity}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Accessibility:</span> {training.accessibilityFeatures?.join(", ") || "None"}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {trainings.filter(t => t.status === "upcoming").map(renderTrainingCard)}
               </div>
             </TabsContent>
             
             <TabsContent value="scheduled" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {trainings.filter(t => t.status === "scheduled").map((training, index) => (
-                  <Card key={training._id || index}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardTitle>{training.title}</CardTitle>
-                        {training.thumbnail?.url && (
-                          <img src={training.thumbnail.url} alt={training.title} className="h-12 w-12 object-cover rounded" />
-                        )}
-                      </div>
-                      <CardDescription>{training.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Instructor:</span> {training.instructor?.firstName} {training.instructor?.lastName}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Start:</span> {new Date(training.startDate).toLocaleString()}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">End:</span> {new Date(training.endDate).toLocaleString()}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Location:</span> {training.isVirtual ? (
-                          <a href={training.virtualMeetingLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">Virtual Link</a>
-                        ) : (
-                          training.location
-                        )}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Capacity:</span> {training.capacity}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Accessibility:</span> {training.accessibilityFeatures?.join(", ") || "None"}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {trainings.filter(t => t.status === "scheduled").map(renderTrainingCard)}
               </div>
             </TabsContent>
             
             <TabsContent value="completed" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {trainings.filter(t => t.status === "completed").map((training, index) => (
-                  <Card key={training._id || index}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardTitle>{training.title}</CardTitle>
-                        {training.thumbnail?.url && (
-                          <img src={training.thumbnail.url} alt={training.title} className="h-12 w-12 object-cover rounded" />
-                        )}
-                      </div>
-                      <CardDescription>{training.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Instructor:</span> {training.instructor?.firstName} {training.instructor?.lastName}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Start:</span> {new Date(training.startDate).toLocaleString()}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">End:</span> {new Date(training.endDate).toLocaleString()}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Location:</span> {training.isVirtual ? (
-                          <a href={training.virtualMeetingLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">Virtual Link</a>
-                        ) : (
-                          training.location
-                        )}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Capacity:</span> {training.capacity}
-                      </div>
-                      <div className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-medium">Accessibility:</span> {training.accessibilityFeatures?.join(", ") || "None"}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {trainings.filter(t => t.status === "completed").map(renderTrainingCard)}
               </div>
             </TabsContent>
           </Tabs>
@@ -269,6 +192,53 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        {/* Modal for training details */}
+        {selectedTraining && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="relative w-full max-w-2xl h-[90vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
+              <button
+                className="absolute top-4 right-4 text-3xl font-bold text-gray-400 hover:text-gray-700 dark:hover:text-white z-10"
+                onClick={() => setSelectedTraining(null)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <div className="overflow-y-auto p-8 pt-16 flex-1">
+                {selectedTraining.thumbnail?.url && (
+                  <img
+                    src={selectedTraining.thumbnail.url}
+                    alt={selectedTraining.title}
+                    className="w-full h-56 object-cover rounded mb-6"
+                  />
+                )}
+                <h2 className="text-3xl font-bold mb-3">{selectedTraining.title}</h2>
+                <p className="mb-4 text-muted-foreground text-lg">{selectedTraining.description}</p>
+                <div className="mb-3 text-base">
+                  <span className="font-medium">Instructor:</span> {selectedTraining.instructor?.firstName} {selectedTraining.instructor?.lastName}
+                </div>
+                <div className="mb-3 text-base">
+                  <span className="font-medium">Start:</span> {new Date(selectedTraining.startDate).toLocaleString()}
+                </div>
+                <div className="mb-3 text-base">
+                  <span className="font-medium">End:</span> {new Date(selectedTraining.endDate).toLocaleString()}
+                </div>
+                <div className="mb-3 text-base">
+                  <span className="font-medium">Location:</span> {selectedTraining.isVirtual ? (
+                    <a href={selectedTraining.virtualMeetingLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">Virtual Link</a>
+                  ) : (
+                    selectedTraining.location
+                  )}
+                </div>
+                <div className="mb-3 text-base">
+                  <span className="font-medium">Capacity:</span> {selectedTraining.capacity}
+                </div>
+                <div className="mb-3 text-base">
+                  <span className="font-medium">Accessibility:</span> {selectedTraining.accessibilityFeatures?.join(", ") || "None"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

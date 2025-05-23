@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
 import { ThemeToggle } from "./theme-toggle"
 import { Button } from "./ui/button"
-import { Menu, X, Bell, User, Settings, LogOut, LayoutDashboard } from "lucide-react"
+import { Menu, X, Bell, User, Settings, LogOut, LayoutDashboard, Loader2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { logout } from "@/redux/api/loginApiSlice"
 import type { AppDispatch, RootState } from "@/redux/store"
+import OTMSLoader from "@/components/OTMSLoader"
 
 export function Navbar() {
   const dispatch = useDispatch<AppDispatch>()
@@ -23,10 +24,19 @@ export function Navbar() {
   const { userInfo } = useSelector((state: RootState) => state.login)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(3)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  const handleLogout = () => {
-    dispatch(logout())
-    router.push("/")
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await dispatch(logout())
+      await new Promise(resolve => setTimeout(resolve, 2000)) // 2-second delay
+      router.push("/login")
+    } catch (error) {
+      console.error("Logout failed:", error)
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   const isLoggedIn = userInfo && userInfo.email ? true : false;
@@ -128,8 +138,8 @@ export function Navbar() {
                   
                   <DropdownMenuSeparator />
                   
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer w-full flex items-center text-red-600">
-                    <LogOut className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer w-full flex items-center text-red-600" disabled={isLoggingOut}>
+                    {isLoggingOut ? <OTMSLoader /> : <LogOut className="mr-2 h-4 w-4" />}
                     <span>Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -222,7 +232,7 @@ export function Navbar() {
                 </Button>
                 <Button variant="default" size="sm" asChild className="justify-start" onClick={handleLogout}>
                   <Link href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-                    <LogOut className="mr-2 h-4 w-4" /> Logout
+                    {isLoggingOut ? <OTMSLoader /> : <LogOut className="mr-2 h-4 w-4" />}
                   </Link>
                 </Button>
               </div>
