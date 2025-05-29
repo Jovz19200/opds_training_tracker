@@ -11,11 +11,20 @@ import { Mail, Phone, MapPin, Check } from "lucide-react"
 export default function ContactPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // In a real app, you would send the form data to your backend
+    const formData = new FormData(e.currentTarget)
+    const name = formData.get('name')
+    const email = formData.get('email')
+    const organization = formData.get('organization')
+    const message = formData.get('message')
+
+    // Create mailto link with form data
+    const mailtoLink = `mailto:mugabo.kefa00@gmail.com?subject=Contact Form Submission from ${name}&body=Name: ${name}%0D%0AEmail: ${email}%0D%0AOrganization: ${organization}%0D%0A%0D%0AMessage:%0D%0A${message}`
+    
+    // Open default email client
+    window.location.href = mailtoLink
     setIsSubmitted(true)
-    // Reset form fields here if needed
   }
   
   return (
@@ -53,7 +62,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-medium">Email</h3>
-                      <p className="text-muted-foreground">info@otms.rw</p>
+                      <p className="text-muted-foreground">mugabo.kefa00@gmail.com</p>
                     </div>
                   </div>
                   
@@ -63,7 +72,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-medium">Phone</h3>
-                      <p className="text-muted-foreground">+250 78 000 0000</p>
+                      <p className="text-muted-foreground">+250 78 3430138</p>
                     </div>
                   </div>
                   
@@ -86,9 +95,9 @@ export default function ContactPage() {
                     <div className="bg-primary/10 p-3 rounded-full mb-4">
                       <Check className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">Message Sent!</h3>
+                    <h3 className="text-xl font-bold mb-2">Form Submitted!</h3>
                     <p className="text-muted-foreground mb-6">
-                      Thank you for contacting us. We'll get back to you shortly.
+                      Your default email client should open. Please send the email to complete the process.
                     </p>
                     <Button onClick={() => setIsSubmitted(false)}>Send Another Message</Button>
                   </div>
@@ -100,6 +109,7 @@ export default function ContactPage() {
                       </label>
                       <Input 
                         id="name" 
+                        name="name"
                         placeholder="Enter your full name" 
                         required 
                       />
@@ -111,6 +121,7 @@ export default function ContactPage() {
                       </label>
                       <Input 
                         id="email" 
+                        name="email"
                         type="email" 
                         placeholder="Enter your email address" 
                         required 
@@ -123,6 +134,7 @@ export default function ContactPage() {
                       </label>
                       <Input 
                         id="organization" 
+                        name="organization"
                         placeholder="Enter your organization name" 
                       />
                     </div>
@@ -133,6 +145,7 @@ export default function ContactPage() {
                       </label>
                       <Textarea 
                         id="message" 
+                        name="message"
                         placeholder="How can we help you?" 
                         rows={5}
                         required 

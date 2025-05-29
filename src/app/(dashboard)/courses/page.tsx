@@ -3,9 +3,9 @@
 import { useEffect } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { courseApi } from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Skeleton } from '../../../components/ui/skeleton';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
 import { AxiosResponse } from 'axios';
 
 interface Course {

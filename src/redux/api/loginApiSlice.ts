@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "./api";
 import Cookies from 'js-cookie';
+import { setUser } from "../reducers/authSlice";
 
 interface LoginState {
   loading: boolean;
@@ -15,13 +16,15 @@ interface LoginPayload {
 }
 
 interface LoginResponse {
-  token: string;
   user: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: 'trainee' | 'trainer' | 'admin';
-  };
+    id: string
+    email: string
+    role: string
+    name: string
+  }
+  token: string
+  twoFARequired?: boolean
+  email?: string
 }
 
 interface RegisterPayload {
@@ -33,11 +36,22 @@ interface RegisterPayload {
 }
 
 const getStoredUserInfo = () => {
-  if (typeof window !== 'undefined') {
-    const stored = Cookies.get("userInfo");
-    return stored ? JSON.parse(stored) : {};
+  if (typeof window === 'undefined') {
+    return {};
   }
-  return {};
+  
+  const stored = Cookies.get("userInfo");
+  if (!stored) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+    return parsed || {};
+  } catch (error) {
+    console.error('Error parsing stored user info:', error);
+    return {};
+  }
 };
 
 const initialState: LoginState = {
@@ -53,6 +67,8 @@ export const login = createAsyncThunk<
 >("login", async (payload, { rejectWithValue }) => {
   try {
     const response = await axios.post("/auth/login", payload);
+    // If 2FA is not required, we'll still return the response
+    // but let verify2FA slice handle the user state
     return response.data;
   } catch (error: any) {
     return rejectWithValue(error.response?.data);
@@ -75,17 +91,25 @@ export const register = createAsyncThunk<
 export const logout = createAsyncThunk("logout", async () => {
   Cookies.remove("accessToken");
   Cookies.remove("userInfo");
+  localStorage.removeItem("userInfo");
   return null;
 });
 
 const loginApiSlice = createSlice({
   name: "login",
   initialState,
-  reducers: {},
+  reducers: {
+    clearLoginState: (state) => {
+      state.loading = false;
+      state.error = null;
+      state.userInfo = {};
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(login.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
@@ -106,6 +130,7 @@ const loginApiSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message ?? "Unknown error";
+        state.userInfo = {};
       })
       .addCase(register.pending, (state) => {
         state.loading = true;
@@ -138,4 +163,5 @@ const loginApiSlice = createSlice({
   },
 });
 
+export const { clearLoginState } = loginApiSlice.actions;
 export default loginApiSlice.reducer;
