@@ -61,17 +61,17 @@ export function Footer() {
               <li>College of Science and Technology</li>
               <li>School of ICT</li>
               <li>Kigali, Rwanda</li>
-              <li>info@otms.rw</li>
+              <li>gisubizo.jovan@gmail.com</li>
             </ul>
           </div>
         </div>
         
         <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground mb-4 md:mb-0">
-            &copy; {new Date().getFullYear()} Organization Trainings Management System. All rights reserved.
+            &copy; {new Date().getFullYear()} OTMS. All rights reserved.
           </p>
           <p className="text-sm text-muted-foreground">
-            Developed by Gacamumakuba David, Umutoniwase Doreen & Niyogisubizo Habarurema Johovanis
+            Developed by David, Doreen &  Johovanis
           </p>
         </div>
       </div>
