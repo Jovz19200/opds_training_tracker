@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
 import { ThemeToggle } from "./theme-toggle"
 import { Button } from "./ui/button"
-import { Menu, X, Bell, User, Settings, LogOut, LayoutDashboard, Loader2 } from "lucide-react"
+import { Menu, X, Bell, User, Settings, LogOut, LayoutDashboard } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ import {
 import { logout } from "@/redux/api/loginApiSlice"
 import type { AppDispatch, RootState } from "@/redux/store"
 import OTMSLoader from "@/components/OTMSLoader"
+import "@/components/OTMSLoaderOverlay.css"
 
 export function Navbar() {
   const dispatch = useDispatch<AppDispatch>()
@@ -30,7 +31,7 @@ export function Navbar() {
     setIsLoggingOut(true)
     try {
       await dispatch(logout())
-      await new Promise(resolve => setTimeout(resolve, 2000)) // 2-second delay
+      await new Promise(resolve => setTimeout(resolve, 1200)) // 1.2-second delay to match login
       router.push("/login")
     } catch (error) {
       console.error("Logout failed:", error)
@@ -40,7 +41,6 @@ export function Navbar() {
   }
 
   const isLoggedIn = userInfo && userInfo.email ? true : false;
-
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -83,22 +83,32 @@ export function Navbar() {
         <div className="flex items-center space-x-4">
           {isLoggedIn ? (
             <>
-              <div className="relative">
-                <Button variant="ghost" size="icon" className="text-foreground/60 hover:text-foreground/80">
-                  <Bell size={20} />
-                  {notificationCount > 0 && (
-                    <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-[10px] font-bold rounded-full flex items-center justify-center text-primary-foreground">
-                      {notificationCount}
-                    </span>
-                  )}
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {notificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
+                        {notificationCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="p-2">
+                    <h4 className="text-sm font-medium">Notifications</h4>
+                    <p className="text-xs text-muted-foreground">You have {notificationCount} unread notifications</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  {/* Add notification items here */}
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden border">
-                      <User size={16} className="text-foreground/80" />
+                  <Button variant="ghost" size="icon" className="relative">
+                    <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                      <User className="h-4 w-4" />
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
@@ -138,8 +148,18 @@ export function Navbar() {
                   
                   <DropdownMenuSeparator />
                   
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer w-full flex items-center text-red-600" disabled={isLoggingOut}>
-                    {isLoggingOut ? <OTMSLoader /> : <LogOut className="mr-2 h-4 w-4" />}
+                  <DropdownMenuItem 
+                    className="cursor-pointer w-full flex items-center"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                  >
+                    {isLoggingOut ? (
+                      <div className="mr-2">
+                        <OTMSLoader />
+                      </div>
+                    ) : (
+                      <LogOut className="mr-2 h-4 w-4" />
+                    )}
                     <span>Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -230,19 +250,34 @@ export function Navbar() {
                     <Settings className="mr-2 h-4 w-4" /> Settings
                   </Link>
                 </Button>
-                <Button variant="default" size="sm" asChild className="justify-start" onClick={handleLogout}>
-                  <Link href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-                    {isLoggingOut ? <OTMSLoader /> : <LogOut className="mr-2 h-4 w-4" />}
-                  </Link>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="justify-start" 
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? (
+                    <div className="mr-2">
+                      <OTMSLoader />
+                    </div>
+                  ) : (
+                    <LogOut className="mr-2 h-4 w-4" />
+                  )}
+                  <span>Logout</span>
                 </Button>
               </div>
             ) : (
-              <div className="flex space-x-2 px-3 pt-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+              <div className="flex flex-col space-y-2 px-3 pt-2">
+                <Button variant="outline" size="sm" asChild className="justify-start">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    Login
+                  </Link>
                 </Button>
-                <Button size="sm" asChild>
-                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
+                <Button size="sm" asChild className="justify-start">
+                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+                    Sign up
+                  </Link>
                 </Button>
               </div>
             )}

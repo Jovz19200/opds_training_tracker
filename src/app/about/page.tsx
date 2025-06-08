@@ -7,7 +7,7 @@ export default function AboutPage() {
       <Navbar />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-slate-50 dark:bg-slate-900 py-12 md:py-24">
+        <section className="bg-slate-50 dark:bg-gradient-to-b dark:from-black dark:to-zinc-900 py-12 md:py-24">
           <div className="container max-w-6xl mx-auto px-4 md:px-6">
             <div className="flex flex-col items-center text-center">
               <h1 className="text-3xl md:text-5xl font-bold mb-6">About OTMS</h1>
@@ -45,7 +45,7 @@ export default function AboutPage() {
                   </p>
                 </div>
               </div>
-              <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-6">
+              <div className="bg-slate-100 dark:bg-zinc-900 rounded-lg p-6 border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30">
                 <h3 className="text-xl font-bold mb-4">Key Challenges We're Solving</h3>
                 <ul className="space-y-3">
                   <li className="flex items-start">
@@ -83,7 +83,7 @@ export default function AboutPage() {
         </section>
 
         {/* Our Vision */}
-        <section className="bg-slate-50 dark:bg-gradient-to-b dark:from-gray-900 dark:via-gray-800 dark:to-slate-900 py-12 md:py-24">
+        <section className="bg-slate-50 dark:bg-gradient-to-b dark:from-black dark:to-zinc-900 py-12 md:py-24">
           <div className="container max-w-6xl mx-auto px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">Our Vision</h2>
@@ -93,21 +93,21 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-background rounded-lg p-6 shadow-sm border">
+              <div className="bg-background rounded-lg p-6 shadow-sm border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30">
                 <h3 className="text-xl font-bold mb-3">Streamlined Processes</h3>
                 <p className="text-muted-foreground">
                   OTMS will enable OPDs to streamline training processes, track beneficiaries progress, 
                   and evaluate training effectiveness through advanced reporting and analytics.
                 </p>
               </div>
-              <div className="bg-background rounded-lg p-6 shadow-sm border">
+              <div className="bg-background rounded-lg p-6 shadow-sm border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30">
                 <h3 className="text-xl font-bold mb-3">Data-Driven Insights</h3>
                 <p className="text-muted-foreground">
                   By leveraging data-driven insights, the system will support informed decision-making, 
                   ensuring that training programs are aligned with organizational goals.
                 </p>
               </div>
-              <div className="bg-background rounded-lg p-6 shadow-sm border">
+              <div className="bg-background rounded-lg p-6 shadow-sm border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30">
                 <h3 className="text-xl font-bold mb-3">Bridging Skill Gaps</h3>
                 <p className="text-muted-foreground">
                   Our system effectively bridges beneficiaries skill gaps and contributes to Rwanda's 
@@ -130,17 +130,17 @@ export default function AboutPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="bg-slate-200 dark:bg-slate-700 rounded-full w-32 h-32 mx-auto mb-4"></div>
+                <div className="bg-slate-200 dark:bg-zinc-900 rounded-full w-32 h-32 mx-auto mb-4 border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30"></div>
                 <h3 className="text-lg font-bold">Gacamumakuba David</h3>
                 <p className="text-muted-foreground text-sm">Student ID: 221010521</p>
               </div>
               <div className="text-center">
-                <div className="bg-slate-200 dark:bg-slate-700 rounded-full w-32 h-32 mx-auto mb-4"></div>
+                <div className="bg-slate-200 dark:bg-zinc-900 rounded-full w-32 h-32 mx-auto mb-4 border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30"></div>
                 <h3 className="text-lg font-bold">Umutoniwase Doreen</h3>
                 <p className="text-muted-foreground text-sm">Student ID: 221021732</p>
               </div>
               <div className="text-center">
-                <div className="bg-slate-200 dark:bg-slate-700 rounded-full w-32 h-32 mx-auto mb-4"></div>
+                <div className="bg-slate-200 dark:bg-zinc-900 rounded-full w-32 h-32 mx-auto mb-4 border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30"></div>
                 <h3 className="text-lg font-bold">Niyogisubizo Habarurema Johovanis</h3>
                 <p className="text-muted-foreground text-sm">Student ID: 221020951</p>
               </div>
