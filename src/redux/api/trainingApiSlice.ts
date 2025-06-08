@@ -56,6 +56,23 @@ export const fetchTrainings = createAsyncThunk<
   }
 });
 
+export const createTraining = createAsyncThunk<
+  Training,
+  { formData: FormData },
+  { rejectValue: { message: string } }
+>("trainings/create", async ({ formData }, { rejectWithValue }) => {
+  try {
+    const response = await axios.post<{ success: boolean; data: Training }>("/courses", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data);
+  }
+});
+
 const trainingApiSlice = createSlice({
   name: "trainings",
   initialState,
@@ -73,6 +90,18 @@ const trainingApiSlice = createSlice({
       .addCase(fetchTrainings.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message ?? "Failed to fetch trainings";
+      })
+      .addCase(createTraining.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createTraining.fulfilled, (state, action) => {
+        state.loading = false;
+        state.trainings = [...state.trainings, action.payload];
+      })
+      .addCase(createTraining.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message ?? "Failed to create training";
       });
   },
 });
