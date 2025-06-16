@@ -6,6 +6,7 @@ import trainingReducer from "./api/trainingApiSlice";
 import verify2FAReducer from "./api/verify2FAApiSlice";
 import authReducer from "./reducers/authSlice";
 
+
 export const store = configureStore({
   reducer: {
     login: loginReducer,
@@ -14,7 +15,6 @@ export const store = configureStore({
     verify2FA: verify2FAReducer,
     auth: authReducer,
   },
-});
-
+}); 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
