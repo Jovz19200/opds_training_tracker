@@ -21,13 +21,13 @@ import { CreateTrainingDialog } from "@/components/create-training-dialog"
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/redux/store"
-import { fetchTrainings, createTraining, type Training } from "@/redux/api/trainingApiSlice"
+import { fetchTrainings, createTraining, type Course } from "@/redux/api/trainingApiSlice"
 import OTMSLoader from "@/components/OTMSLoader"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function TrainerDashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { trainings, loading, error } = useSelector((state: RootState) => state.trainings);
+  const { courses, loading, error } = useSelector((state: RootState) => state.trainings);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -121,12 +121,25 @@ export default function TrainerDashboardPage() {
     }
   }
 
-  const handleCreateTraining = async (newTraining: Omit<Training, "_id" | "instructor" | "status">, thumbnailFile?: File) => {
+  const handleCreateTraining = async (newTraining: Omit<Course, "_id" | "instructor" | "status" | "createdAt">, thumbnailFile?: File) => {
     try {
       const formData = new FormData();
+      
+      // Ensure organization ID is included
+      if (!newTraining.organization) {
+        throw new Error("Organization ID is required");
+      }
+
+      // Format the training data with organization as an object
+      const trainingData = {
+        ...newTraining,
+        organization: {
+          _id: newTraining.organization
+        }
+      };
 
       // Append training data
-      formData.append('training', JSON.stringify(newTraining));
+      formData.append('training', JSON.stringify(trainingData));
 
       // Append thumbnail if exists
       if (thumbnailFile) {
@@ -143,7 +156,7 @@ export default function TrainerDashboardPage() {
       console.error('Error creating training:', error);
       toast({
         title: "Error",
-        description: "Failed to create training. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create training. Please try again.",
         variant: "destructive",
       });
     }
@@ -183,7 +196,7 @@ export default function TrainerDashboardPage() {
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{trainings.length}</div>
+                <div className="text-2xl font-bold">{courses.length}</div>
                 <p className="text-xs text-muted-foreground">Ongoing sessions</p>
               </CardContent>
             </Card>
@@ -231,38 +244,38 @@ export default function TrainerDashboardPage() {
             {/* Manage Trainings */}
             <TabsContent value="trainings" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {trainings.map((training, index) => (
+                {courses.map((course, index) => (
                   <Card key={index}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle>{training.title}</CardTitle>
+                          <CardTitle>{course.title}</CardTitle>
                           <CardDescription className="mt-2">
-                            {training.description}
+                            {course.description}
                           </CardDescription>
                         </div>
-                        <Badge variant={training.isVirtual ? "secondary" : "default"}>
-                          {training.isVirtual ? <Video className="h-3 w-3 mr-1" /> : <MapPin className="h-3 w-3 mr-1" />}
-                          {training.isVirtual ? "Virtual" : "In-Person"}
+                        <Badge variant={course.isVirtual ? "secondary" : "default"}>
+                          {course.isVirtual ? <Video className="h-3 w-3 mr-1" /> : <MapPin className="h-3 w-3 mr-1" />}
+                          {course.isVirtual ? "Virtual" : "In-Person"}
                         </Badge>
                       </div>
                       <div className="mt-2 flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4 mr-1" />
-                        {new Date(training.startDate).toLocaleDateString()} • {training.duration}h
+                        {new Date(course.startDate).toLocaleDateString()} • {course.duration}h
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {training.isVirtual ? "Online" : training.location}
+                        {course.isVirtual ? "Online" : course.location}
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-muted-foreground">Capacity:</span>
-                          <span className="text-sm font-medium">{training.capacity}</span>
+                          <span className="text-sm font-medium">{course.capacity}</span>
                         </div>
-                        {training.accessibilityFeatures.length > 0 && (
+                        {course.accessibilityFeatures.length > 0 && (
                           <div className="flex flex-wrap gap-1">
-                            {training.accessibilityFeatures.map((feature) => (
+                            {course.accessibilityFeatures.map((feature) => (
                               <Badge key={feature} variant="outline" className="text-xs">
                                 {feature}
                               </Badge>

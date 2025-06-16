@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
-import { fetchTrainings } from "@/redux/api/trainingApiSlice";
+import { fetchTrainings, type Course } from "@/redux/api/trainingApiSlice";
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,7 @@ import OTMSLoader from "@/components/OTMSLoader"
 
 export default function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { trainings, loading } = useSelector((state: RootState) => state.trainings);
+  const { courses, loading } = useSelector((state: RootState) => state.trainings);
   const [selectedTraining, setSelectedTraining] = useState<any | null>(null);
 
   useEffect(() => {
@@ -38,31 +38,31 @@ export default function DashboardPage() {
     );
   }
 
-  const renderTrainingCard = (training: any) => (
+  const renderTrainingCard = (course: Course) => (
     <div
-      key={training._id}
+      key={course._id}
       className="bg-white dark:bg-slate-900 shadow-lg rounded-lg overflow-hidden flex flex-col cursor-pointer transition-transform hover:scale-[1.02]"
       style={{ border: "none" }}
-      onClick={() => setSelectedTraining(training)}
+      onClick={() => setSelectedTraining(course)}
     >
-      {training.thumbnail?.url && (
+      {course.thumbnail?.url && (
         <img
-          src={training.thumbnail.url}
-          alt={training.title}
+          src={course.thumbnail.url}
+          alt={course.title}
           className="w-full h-40 object-cover"
         />
       )}
       <div className="p-4 flex-1 flex flex-col justify-between">
-        <h2 className="text-lg font-bold mb-1 truncate" title={training.title}>
-          {training.title}
+        <h2 className="text-lg font-bold mb-1 truncate" title={course.title}>
+          {course.title}
         </h2>
         <p className="text-sm text-muted-foreground mb-2">
-          {training.description?.length > 30
-            ? training.description.slice(0, 15) + "..."
-            : training.description}
+          {course.description?.length > 30
+            ? course.description.slice(0, 15) + "..."
+            : course.description}
         </p>
         <div className="mt-auto pt-2 text-xs text-muted-foreground font-medium">
-          By {training.instructor?.firstName} {training.instructor?.lastName}
+          By {course.instructor?.firstName} {course.instructor?.lastName}
         </div>
       </div>
     </div>
@@ -142,19 +142,19 @@ export default function DashboardPage() {
             
             <TabsContent value="upcoming" className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {trainings.filter(t => t.status === "upcoming").map(renderTrainingCard)}
+                {courses.filter(t => t.status === "scheduled").map(renderTrainingCard)}
               </div>
             </TabsContent>
             
             <TabsContent value="scheduled" className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {trainings.filter(t => t.status === "scheduled").map(renderTrainingCard)}
+                {courses.filter(t => t.status === "scheduled").map(renderTrainingCard)}
               </div>
             </TabsContent>
             
             <TabsContent value="completed" className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {trainings.filter(t => t.status === "completed").map(renderTrainingCard)}
+                {courses.filter(t => t.status === "completed").map(renderTrainingCard)}
               </div>
             </TabsContent>
           </Tabs>
@@ -166,7 +166,7 @@ export default function DashboardPage() {
               <Button variant="ghost" size="sm">View All</Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {trainings.map((course, index) => (
+              {courses.map((course, index) => (
                 <Card key={index} className="relative overflow-hidden border dark:border-slate-800 bg-background p-2 dark:bg-slate-900/10 backdrop-blur-sm dark:backdrop-blur-md hover:dark:border-slate-700/50 transition-colors">
                   <CardHeader>
                     <div className="flex justify-between items-start">

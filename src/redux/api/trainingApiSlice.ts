@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "./api";
 
-export interface Training {
+export interface Course {
   _id: string;
   title: string;
   description: string;
@@ -17,39 +17,49 @@ export interface Training {
     firstName: string;
     lastName: string;
   };
+  organization: string;
   thumbnail?: {
     url: string;
     public_id: string;
   };
-  status: string;
+  materials: {
+    title: string;
+    fileUrl: string;
+    fileType: string;
+    uploadDate: string;
+  }[];
+  prerequisites: string[];
+  status: 'scheduled' | 'active' | 'completed' | 'cancelled';
   accessibilityFeatures: string[];
+  tags: string[];
+  createdAt: string;
 }
 
-interface TrainingResponse {
+interface CourseResponse {
   success: boolean;
   count: number;
-  data: Training[];
+  data: Course[];
 }
 
-interface TrainingState {
-  trainings: Training[];
+interface CourseState {
+  courses: Course[];
   loading: boolean;
   error: string | null;
 }
 
-const initialState: TrainingState = {
-  trainings: [],
+const initialState: CourseState = {
+  courses: [],
   loading: false,
   error: null,
 };
 
 export const fetchTrainings = createAsyncThunk<
-  Training[],
+  Course[],
   void,
   { rejectValue: { message: string } }
 >("trainings/fetchAll", async (_, { rejectWithValue }) => {
   try {
-    const response = await axios.get<TrainingResponse>("/courses");
+    const response = await axios.get<CourseResponse>("/courses");
     return response.data.data;
   } catch (error: any) {
     return rejectWithValue(error.response?.data);
@@ -57,12 +67,12 @@ export const fetchTrainings = createAsyncThunk<
 });
 
 export const createTraining = createAsyncThunk<
-  Training,
+  Course,
   { formData: FormData },
   { rejectValue: { message: string } }
 >("trainings/create", async ({ formData }, { rejectWithValue }) => {
   try {
-    const response = await axios.post<{ success: boolean; data: Training }>("/courses", formData, {
+    const response = await axios.post<{ success: boolean; data: Course }>("/courses", formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -85,11 +95,11 @@ const trainingApiSlice = createSlice({
       })
       .addCase(fetchTrainings.fulfilled, (state, action) => {
         state.loading = false;
-        state.trainings = action.payload;
+        state.courses = action.payload;
       })
       .addCase(fetchTrainings.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message ?? "Failed to fetch trainings";
+        state.error = action.payload?.message ?? "Failed to fetch courses";
       })
       .addCase(createTraining.pending, (state) => {
         state.loading = true;
@@ -97,11 +107,11 @@ const trainingApiSlice = createSlice({
       })
       .addCase(createTraining.fulfilled, (state, action) => {
         state.loading = false;
-        state.trainings = [...state.trainings, action.payload];
+        state.courses = [...state.courses, action.payload];
       })
       .addCase(createTraining.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message ?? "Failed to create training";
+        state.error = action.payload?.message ?? "Failed to create course";
       });
   },
 });
