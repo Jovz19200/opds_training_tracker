@@ -15,9 +15,6 @@ export const store = configureStore({
     verify2FA: verify2FAReducer,
     auth: authReducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(googleAuthApi.middleware),
-});
-
+ 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
