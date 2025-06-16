@@ -132,17 +132,16 @@ export default function AboutPage() {
               <div className="text-center">
                 <div className="bg-slate-200 dark:bg-zinc-900 rounded-full w-32 h-32 mx-auto mb-4 border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30"></div>
                 <h3 className="text-lg font-bold">Gacamumakuba David</h3>
-                <p className="text-muted-foreground text-sm">Student ID: 221010521</p>
+                
               </div>
               <div className="text-center">
                 <div className="bg-slate-200 dark:bg-zinc-900 rounded-full w-32 h-32 mx-auto mb-4 border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30"></div>
                 <h3 className="text-lg font-bold">Umutoniwase Doreen</h3>
-                <p className="text-muted-foreground text-sm">Student ID: 221021732</p>
               </div>
               <div className="text-center">
                 <div className="bg-slate-200 dark:bg-zinc-900 rounded-full w-32 h-32 mx-auto mb-4 border dark:border-zinc-800 dark:shadow-md dark:shadow-black/30"></div>
-                <h3 className="text-lg font-bold">Niyogisubizo Habarurema Johovanis</h3>
-                <p className="text-muted-foreground text-sm">Student ID: 221020951</p>
+                <h3 className="text-lg font-bold">Habarurema Johovanis</h3>
+
               </div>
             </div>
             <div className="mt-12 text-center">
