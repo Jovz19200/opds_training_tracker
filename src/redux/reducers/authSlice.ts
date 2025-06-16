@@ -1,5 +1,5 @@
 // src/redux/reducers/authSlice.ts
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "../api/api";
 
 // Helper function to safely access localStorage
@@ -28,21 +28,47 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
+interface User {
+  id: string
+  email: string
+  role: string
+  name: string
+}
+
+interface AuthState {
+  user: User | null
+  loading: boolean
+  data: any[]
+  error: string | null
+  userInfo: any
+}
+
+const initialState: AuthState = {
+  user: null,
+  loading: false,
+  data: [],
+  error: null,
+  userInfo: getStoredUserInfo(),
+};
+
 const authSlice = createSlice({
   name: "auth",
-  initialState: {
-    loading: false,
-    data: [],
-    error: null as string | null,
-    userInfo: getStoredUserInfo(),
-  },
+  initialState,
   reducers: {
-    setUser: (state, { payload }) => {
-      state.userInfo = payload;
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      state.userInfo = action.payload;
       if (typeof window !== 'undefined') {
-        localStorage.setItem("userInfo", JSON.stringify(payload));
+        localStorage.setItem("userInfo", JSON.stringify(action.payload));
       }
     },
+    clearUser: (state) => {
+      state.user = null;
+      state.userInfo = {};
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("userInfo");
+      }
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -63,5 +89,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser } = authSlice.actions;
+export const { setUser, clearUser } = authSlice.actions;
 export default authSlice.reducer;
