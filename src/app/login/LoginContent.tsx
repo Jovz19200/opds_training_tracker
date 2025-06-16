@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { CheckCircle, EyeIcon, EyeOffIcon, LogIn } from "lucide-react"
 import { login, clearLoginState } from "@/redux/api/loginApiSlice"
 import { handleNon2FALogin } from "@/redux/api/verify2FAApiSlice"
 import { setUser } from "@/redux/reducers/authSlice"
+
 import type { AppDispatch, RootState } from "@/redux/store"
 import OTMSLoader from "@/components/OTMSLoader"
 import "@/components/OTMSLoaderOverlay.css"
@@ -20,6 +21,7 @@ export default function LoginContent() {
   const dispatch = useDispatch<AppDispatch>()
   const { loading, error } = useSelector((state: RootState) => state.login)
   const { user } = useSelector((state: RootState) => state.auth)
+
   
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -77,6 +79,7 @@ export default function LoginContent() {
       console.error("Login error:", err.message)
     }
   }
+
   
   return (
     <div className="flex min-h-screen flex-col">
@@ -100,6 +103,7 @@ export default function LoginContent() {
                 </div>
               )}
               
+
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-sm font-medium">

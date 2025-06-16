@@ -51,6 +51,7 @@ const getStoredUserInfo = () => {
   } catch (error) {
     console.error('Error parsing stored user info:', error);
     return {};
+
   }
 };
 
@@ -93,6 +94,45 @@ export const logout = createAsyncThunk("logout", async () => {
   Cookies.remove("userInfo");
   localStorage.removeItem("userInfo");
   return null;
+});
+
+export const handleGoogleAuthToken = createAsyncThunk<
+  LoginResponse,
+  string,
+  { rejectValue: { message: string } }
+>("login/handleGoogleAuthToken", async (token, { rejectWithValue }) => {
+  try {
+    // Set the token in axios defaults for this request
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    const response = await axios.get("/auth/me");
+    
+    // Check if response.data is the user object directly
+    const userData = response.data.data;
+    
+    if (!userData) {
+      throw new Error('No user data received');
+    }
+    
+    // Store the token and user info in cookies
+    Cookies.set("accessToken", token, {
+      secure: true,
+      sameSite: 'strict',
+      expires: 7 // 7 days
+    });
+    Cookies.set("userInfo", JSON.stringify(userData), {
+      secure: true,
+      sameSite: 'strict',
+      expires: 7 // 7 days
+    });
+
+    return {
+      token,
+      user: userData
+    };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data || { message: 'Failed to authenticate' });
+  }
 });
 
 const loginApiSlice = createSlice({
@@ -159,6 +199,18 @@ const loginApiSlice = createSlice({
         state.loading = false;
         state.error = null;
         state.userInfo = {};
+      })
+      .addCase(handleGoogleAuthToken.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(handleGoogleAuthToken.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.userInfo = action.payload.user;
+      })
+      .addCase(handleGoogleAuthToken.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message ?? "Failed to authenticate with Google";
       });
   },
 });

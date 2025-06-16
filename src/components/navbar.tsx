@@ -17,6 +17,7 @@ import {
 import { logout } from "@/redux/api/loginApiSlice"
 import type { AppDispatch, RootState } from "@/redux/store"
 import OTMSLoader from "@/components/OTMSLoader"
+import "@/components/OTMSLoaderOverlay.css"
 
 export function Navbar() {
   const dispatch = useDispatch<AppDispatch>()
@@ -31,7 +32,9 @@ export function Navbar() {
     try {
       await dispatch(logout())
       await new Promise(resolve => setTimeout(resolve, 1200)) // 1.2-second delay to match login
+
       window.location.href = "/"
+
     } catch (error) {
       console.error("Logout failed:", error)
     } finally {
