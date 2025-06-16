@@ -6,6 +6,7 @@ import trainingReducer from "./api/trainingApiSlice";
 import verify2FAReducer from "./api/verify2FAApiSlice";
 import authReducer from "./reducers/authSlice";
 
+
 export const store = configureStore({
   reducer: {
     login: loginReducer,
@@ -14,6 +15,8 @@ export const store = configureStore({
     verify2FA: verify2FAReducer,
     auth: authReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(googleAuthApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
