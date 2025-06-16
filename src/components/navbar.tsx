@@ -31,7 +31,7 @@ export function Navbar() {
     try {
       await dispatch(logout())
       await new Promise(resolve => setTimeout(resolve, 1200)) // 1.2-second delay to match login
-      router.push("/login")
+      window.location.href = "/"
     } catch (error) {
       console.error("Logout failed:", error)
     } finally {
