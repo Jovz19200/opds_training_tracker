@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "./api";
 
-interface Organization {
+export interface Organization {
   _id: string;
   name: string;
   description: string;
@@ -42,6 +42,58 @@ export const fetchOrganizations = createAsyncThunk<
   }
 });
 
+export const fetchOrganizationById = createAsyncThunk<
+  Organization,
+  string,
+  { rejectValue: { message: string } }
+>("organizations/fetchById", async (id, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(`/organizations/${id}`);
+    return response.data.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data);
+  }
+});
+
+export const createOrganization = createAsyncThunk<
+  Organization,
+  Partial<Organization>,
+  { rejectValue: { message: string } }
+>("organizations/create", async (orgData, { rejectWithValue }) => {
+  try {
+    const response = await axios.post("/organizations", orgData);
+    return response.data.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data);
+  }
+});
+
+export const updateOrganization = createAsyncThunk<
+  Organization,
+  { id: string; orgData: Partial<Organization> },
+  { rejectValue: { message: string } }
+>("organizations/update", async ({ id, orgData }, { rejectWithValue }) => {
+  try {
+    const response = await axios.put(`/organizations/${id}`, orgData);
+    return response.data.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data);
+  }
+});
+
+export const deleteOrganization = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: { message: string } }
+>("organizations/delete", async (id, { rejectWithValue }) => {
+  try {
+    await axios.delete(`/organizations/${id}`);
+    return id;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data);
+  }
+});
+
 const organizationApiSlice = createSlice({
   name: "organizations",
   initialState,
@@ -59,6 +111,43 @@ const organizationApiSlice = createSlice({
       .addCase(fetchOrganizations.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message ?? "Failed to fetch organizations";
+      })
+      .addCase(createOrganization.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createOrganization.fulfilled, (state, action) => {
+        state.loading = false;
+        state.organizations.push(action.payload);
+      })
+      .addCase(createOrganization.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message ?? "Failed to create organization";
+      })
+      .addCase(updateOrganization.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateOrganization.fulfilled, (state, action) => {
+        state.loading = false;
+        const idx = state.organizations.findIndex(org => org._id === action.payload._id);
+        if (idx !== -1) state.organizations[idx] = action.payload;
+      })
+      .addCase(updateOrganization.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message ?? "Failed to update organization";
+      })
+      .addCase(deleteOrganization.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteOrganization.fulfilled, (state, action) => {
+        state.loading = false;
+        state.organizations = state.organizations.filter(org => org._id !== action.payload);
+      })
+      .addCase(deleteOrganization.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message ?? "Failed to delete organization";
       });
   },
 });

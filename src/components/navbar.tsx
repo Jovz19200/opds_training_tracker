@@ -24,7 +24,7 @@ export function Navbar() {
   const router = useRouter()
   const { userInfo } = useSelector((state: RootState) => state.auth)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(3)
+  const [notificationCount, setNotificationCount] = useState(1)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {

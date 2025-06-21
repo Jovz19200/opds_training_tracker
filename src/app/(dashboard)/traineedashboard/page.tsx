@@ -106,8 +106,8 @@ export default function DashboardPage() {
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">7</div>
-                <p className="text-xs text-muted-foreground">3 certificates earned</p>
+                <div className="text-2xl font-bold">3</div>
+                <p className="text-xs text-muted-foreground">0 certificates earned</p>
               </CardContent>
             </Card>
             <Card>
@@ -116,8 +116,8 @@ export default function DashboardPage() {
                 <Award className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">85%</div>
-                <p className="text-xs text-muted-foreground">Based on 7 completed courses</p>
+                <div className="text-2xl font-bold">70%</div>
+                <p className="text-xs text-muted-foreground">Based on 3 completed courses</p>
               </CardContent>
             </Card>
             <Card>
@@ -126,7 +126,7 @@ export default function DashboardPage() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-bold">Tomorrow, 10:00 AM</div>
+                <div className="text-xl font-bold">Tomorrow, 8:00 AM</div>
                 <p className="text-xs text-muted-foreground">Digital Accessibility Training</p>
               </CardContent>
             </Card>
