@@ -21,8 +21,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
-import { Edit, Loader2, AlertCircle } from "lucide-react";
+import { Edit, Loader2, AlertCircle, Star } from "lucide-react";
 import { OTMSLoader } from "@/components/ui/otms-loader";
+import { Badge } from "@/components/ui/badge";
 
 export function FeedbackManagement() {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,7 +32,27 @@ export function FeedbackManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
-  const [formData, setFormData] = useState<{ comment: string; rating: number }>({ comment: "", rating: 1 });
+  const [formData, setFormData] = useState<{ 
+    commentContent: string; 
+    commentInstructor: string; 
+    commentGeneral: string; 
+    suggestions: string;
+    overallRating: number;
+    contentRating: number;
+    instructorRating: number;
+    facilitiesRating: number;
+    accessibilityRating: number;
+  }>({ 
+    commentContent: "", 
+    commentInstructor: "", 
+    commentGeneral: "", 
+    suggestions: "",
+    overallRating: 1,
+    contentRating: 1,
+    instructorRating: 1,
+    facilitiesRating: 1,
+    accessibilityRating: 1
+  });
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteFeedbackId, setDeleteFeedbackId] = useState<string | null>(null);
@@ -42,7 +63,17 @@ export function FeedbackManagement() {
 
   const handleEditClick = (feedback: Feedback) => {
     setSelectedFeedback(feedback);
-    setFormData({ comment: feedback.comment, rating: feedback.rating });
+    setFormData({ 
+      commentContent: feedback.commentContent || "", 
+      commentInstructor: feedback.commentInstructor || "", 
+      commentGeneral: feedback.commentGeneral || "", 
+      suggestions: feedback.suggestions || "",
+      overallRating: feedback.overallRating,
+      contentRating: feedback.contentRating,
+      instructorRating: feedback.instructorRating,
+      facilitiesRating: feedback.facilitiesRating,
+      accessibilityRating: feedback.accessibilityRating
+    });
     setIsEditDialogOpen(true);
   };
 
@@ -82,6 +113,22 @@ export function FeedbackManagement() {
     }
   };
 
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex items-center space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-4 w-4 ${
+              star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
+            }`}
+          />
+        ))}
+        <span className="ml-1 text-sm text-muted-foreground">({rating})</span>
+      </div>
+    );
+  };
+
   if (loading) return <OTMSLoader />;
   if (error) return <div className="text-red-600">{error}</div>;
 
@@ -91,22 +138,43 @@ export function FeedbackManagement() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Course ID</TableHead>
-            <TableHead>User ID</TableHead>
-            <TableHead>Comment</TableHead>
-            <TableHead>Rating</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead>User</TableHead>
+            <TableHead>Training</TableHead>
+            <TableHead>Overall Rating</TableHead>
+            <TableHead>Content Rating</TableHead>
+            <TableHead>Instructor Rating</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Submission Date</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {feedbacks.map((fb) => (
             <TableRow key={fb._id}>
-              <TableCell>{fb.courseId}</TableCell>
-              <TableCell>{fb.userId}</TableCell>
-              <TableCell>{fb.comment}</TableCell>
-              <TableCell>{fb.rating}</TableCell>
-              <TableCell>{new Date(fb.createdAt).toLocaleString()}</TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">
+                    {fb.isAnonymous ? "Anonymous" : `${fb.user.firstName} ${fb.user.lastName}`}
+                  </div>
+                  {fb.isAnonymous && (
+                    <div className="text-xs text-muted-foreground">Anonymous feedback</div>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="max-w-xs truncate" title={fb.course.title}>
+                  {fb.course.title}
+                </div>
+              </TableCell>
+              <TableCell>{renderStars(fb.overallRating)}</TableCell>
+              <TableCell>{renderStars(fb.contentRating)}</TableCell>
+              <TableCell>{renderStars(fb.instructorRating)}</TableCell>
+              <TableCell>
+                <Badge variant={fb.enrollment.status === "completed" ? "default" : "secondary"}>
+                  {fb.enrollment.status}
+                </Badge>
+              </TableCell>
+              <TableCell>{new Date(fb.submissionDate).toLocaleDateString()}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => handleEditClick(fb)} aria-label="Edit">
@@ -137,31 +205,96 @@ export function FeedbackManagement() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Feedback</DialogTitle>
             <DialogDescription>Update the feedback details.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateFeedback} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="edit-overall-rating">Overall Rating</label>
+                <Input
+                  id="edit-overall-rating"
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={formData.overallRating}
+                  onChange={(e) => setFormData({ ...formData, overallRating: Number(e.target.value) })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="edit-content-rating">Content Rating</label>
+                <Input
+                  id="edit-content-rating"
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={formData.contentRating}
+                  onChange={(e) => setFormData({ ...formData, contentRating: Number(e.target.value) })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="edit-instructor-rating">Instructor Rating</label>
+                <Input
+                  id="edit-instructor-rating"
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={formData.instructorRating}
+                  onChange={(e) => setFormData({ ...formData, instructorRating: Number(e.target.value) })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="edit-facilities-rating">Facilities Rating</label>
+                <Input
+                  id="edit-facilities-rating"
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={formData.facilitiesRating}
+                  onChange={(e) => setFormData({ ...formData, facilitiesRating: Number(e.target.value) })}
+                  required
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <label htmlFor="edit-comment">Comment</label>
+              <label htmlFor="edit-comment-content">Content Comment</label>
               <Input
-                id="edit-comment"
-                value={formData.comment}
-                onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-                required
+                id="edit-comment-content"
+                value={formData.commentContent}
+                onChange={(e) => setFormData({ ...formData, commentContent: e.target.value })}
+                placeholder="Comment about the training content"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="edit-rating">Rating</label>
+              <label htmlFor="edit-comment-instructor">Instructor Comment</label>
               <Input
-                id="edit-rating"
-                type="number"
-                min={1}
-                max={5}
-                value={formData.rating}
-                onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) })}
-                required
+                id="edit-comment-instructor"
+                value={formData.commentInstructor}
+                onChange={(e) => setFormData({ ...formData, commentInstructor: e.target.value })}
+                placeholder="Comment about the instructor"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="edit-comment-general">General Comment</label>
+              <Input
+                id="edit-comment-general"
+                value={formData.commentGeneral}
+                onChange={(e) => setFormData({ ...formData, commentGeneral: e.target.value })}
+                placeholder="General feedback"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="edit-suggestions">Suggestions</label>
+              <Input
+                id="edit-suggestions"
+                value={formData.suggestions}
+                onChange={(e) => setFormData({ ...formData, suggestions: e.target.value })}
+                placeholder="Suggestions for improvement"
               />
             </div>
             <DialogFooter>

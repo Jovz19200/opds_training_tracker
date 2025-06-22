@@ -10,12 +10,14 @@ import {
   BookOpen,
   FileText,
   UserPlus,
-  Settings
+  Settings,
+  BarChart3
 } from "lucide-react"
 import { UserManagement } from "@/components/user-management"
 import { OrganizationManagement } from "@/components/organization-management"
 import { TrainingManagement } from "@/components/training-management"
 import { FeedbackManagement } from "@/components/feedback-management"
+import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard"
 import { useSelector, useDispatch } from "react-redux"
 import type { RootState, AppDispatch } from "@/redux/store"
 import { useEffect } from "react"
@@ -27,16 +29,21 @@ import { fetchFeedbacks } from "@/redux/api/feedbackApiSlice"
 export default function AdminDashboardPage() {
   const dispatch = useDispatch<AppDispatch>()
   useEffect(() => {
-    dispatch(fetchUsers())
+    dispatch(fetchUsers({ page: 1, limit: 10 }))
     dispatch(fetchOrganizations())
     dispatch(fetchTrainings())
     dispatch(fetchFeedbacks())
   }, [dispatch])
 
-  const userCount = useSelector((state: RootState) => state.users.users.length)
-  const orgCount = useSelector((state: RootState) => state.organizations.organizations.length)
-  const trainingCount = useSelector((state: RootState) => state.trainings.courses.length)
-  const feedbackCount = useSelector((state: RootState) => state.feedback.feedbacks.length)
+  const userCount = useSelector((state: RootState) => {
+    if (state.users.pagination?.totalUsers !== undefined) {
+      return state.users.pagination.totalUsers;
+    }
+    return state.users.users?.length || 0;
+  })
+  const orgCount = useSelector((state: RootState) => state.organizations.organizations?.length || 0)
+  const trainingCount = useSelector((state: RootState) => state.trainings.courses?.length || 0)
+  const feedbackCount = useSelector((state: RootState) => state.feedback.feedbacks?.length || 0)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -95,14 +102,22 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="users" className="space-y-4">
+          <Tabs defaultValue="analytics" className="space-y-4">
             <TabsList>
               <TabsTrigger value="users">User Management</TabsTrigger>
               <TabsTrigger value="organizations">Organizations</TabsTrigger>
               <TabsTrigger value="trainings">Trainings</TabsTrigger>
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center space-x-2">
+                <BarChart3 className="h-4 w-4" />
+                <span>Analytics</span>
+              </TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="analytics" className="space-y-4">
+              <AnalyticsDashboard />
+            </TabsContent>
 
             <TabsContent value="users" className="space-y-4">
               <UserManagement />

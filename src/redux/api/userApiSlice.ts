@@ -18,11 +18,42 @@ export interface User {
   createdAt: string;
 }
 
+export interface PaginatedUsersResponse {
+  users: User[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalUsers: number;
+    usersPerPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+// API Response structure
+interface ApiResponse {
+  success: boolean;
+  count: number;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  data: User[];
+}
+
 interface UserState {
   users: User[];
   selectedUser: User | null;
   loading: boolean;
   error: string | null;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalUsers: number;
+    usersPerPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  } | null;
 }
 
 const initialState: UserState = {
@@ -30,14 +61,48 @@ const initialState: UserState = {
   selectedUser: null,
   loading: false,
   error: null,
+  pagination: null,
 };
 
-// Fetch all users
-export const fetchUsers = createAsyncThunk<User[], void, { rejectValue: ErrorResponse }>(
+// Fetch users with pagination
+export const fetchUsers = createAsyncThunk<
+  PaginatedUsersResponse, 
+  { page?: number; limit?: number; search?: string; q?: string; role?: string; status?: string }, 
+  { rejectValue: ErrorResponse }
+>(
   "users/fetchAll",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      console.log('API call params:', params); // Debug log
+      const response = await axios.get("/users", { params });
+      console.log('API response:', response.data); // Debug log
+      const apiResponse: ApiResponse = response.data;
+      
+      // Transform API response to match our expected structure
+      return {
+        users: apiResponse.data,
+        pagination: {
+          currentPage: apiResponse.page,
+          totalPages: apiResponse.totalPages,
+          totalUsers: apiResponse.total,
+          usersPerPage: apiResponse.limit,
+          hasNextPage: apiResponse.page < apiResponse.totalPages,
+          hasPrevPage: apiResponse.page > 1,
+        }
+      };
+    } catch (error: any) {
+      console.error('API error:', error.response?.data || error.message); // Debug log
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
+// Fetch all users (for backward compatibility)
+export const fetchAllUsers = createAsyncThunk<User[], void, { rejectValue: ErrorResponse }>(
+  "users/fetchAllUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/users");
+      const response = await axios.get("/users/all");
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data);
@@ -151,7 +216,8 @@ const userApiSlice = createSlice({
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload;
+        state.users = action.payload.users;
+        state.pagination = action.payload.pagination;
       })
       .addCase(fetchUsers.rejected, (state, action) => {
         state.loading = false;
@@ -167,25 +233,22 @@ const userApiSlice = createSlice({
       .addCase(fetchUserById.rejected, (state, action) => {
         state.error = action.payload?.message || "Failed to fetch user";
       })
-      // Create user
+      // Create user - don't update local state, let the component refresh
       .addCase(createUser.pending, (state) => {
         state.error = null;
       })
       .addCase(createUser.fulfilled, (state, action) => {
-        state.users.push(action.payload);
+        // Don't update local state - let the component refresh the paginated data
       })
       .addCase(createUser.rejected, (state, action) => {
         state.error = action.payload?.message || "Failed to create user";
       })
-      // Update user
+      // Update user - don't update local state, let the component refresh
       .addCase(updateUser.pending, (state) => {
         state.error = null;
       })
       .addCase(updateUser.fulfilled, (state, action) => {
-        const index = state.users.findIndex(user => user._id === action.payload._id);
-        if (index !== -1) {
-          state.users[index] = action.payload;
-        }
+        // Don't update local state - let the component refresh the paginated data
         if (state.selectedUser?._id === action.payload._id) {
           state.selectedUser = action.payload;
         }
@@ -193,12 +256,12 @@ const userApiSlice = createSlice({
       .addCase(updateUser.rejected, (state, action) => {
         state.error = action.payload?.message || "Failed to update user";
       })
-      // Delete user
+      // Delete user - don't update local state, let the component refresh
       .addCase(deleteUser.pending, (state) => {
         state.error = null;
       })
       .addCase(deleteUser.fulfilled, (state, action) => {
-        state.users = state.users.filter(user => user._id !== action.payload);
+        // Don't update local state - let the component refresh the paginated data
         if (state.selectedUser?._id === action.payload) {
           state.selectedUser = null;
         }
@@ -206,15 +269,12 @@ const userApiSlice = createSlice({
       .addCase(deleteUser.rejected, (state, action) => {
         state.error = action.payload?.message || "Failed to delete user";
       })
-      // Enable 2FA for user
+      // Enable 2FA for user - don't update local state, let the component refresh
       .addCase(enable2FAForUser.pending, (state) => {
         state.error = null;
       })
       .addCase(enable2FAForUser.fulfilled, (state, action) => {
-        const index = state.users.findIndex(user => user._id === action.payload._id);
-        if (index !== -1) {
-          state.users[index] = action.payload;
-        }
+        // Don't update local state - let the component refresh the paginated data
         if (state.selectedUser?._id === action.payload._id) {
           state.selectedUser = action.payload;
         }
@@ -222,15 +282,12 @@ const userApiSlice = createSlice({
       .addCase(enable2FAForUser.rejected, (state, action) => {
         state.error = action.payload?.message || "Failed to enable 2FA";
       })
-      // Disable 2FA for user
+      // Disable 2FA for user - don't update local state, let the component refresh
       .addCase(disable2FAForUser.pending, (state) => {
         state.error = null;
       })
       .addCase(disable2FAForUser.fulfilled, (state, action) => {
-        const index = state.users.findIndex(user => user._id === action.payload._id);
-        if (index !== -1) {
-          state.users[index] = action.payload;
-        }
+        // Don't update local state - let the component refresh the paginated data
         if (state.selectedUser?._id === action.payload._id) {
           state.selectedUser = action.payload;
         }

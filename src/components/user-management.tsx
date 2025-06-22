@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "@/redux/store"
 import {
@@ -39,17 +39,28 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useToast } from "@/components/ui/use-toast"
-import { Pencil, Trash2, UserPlus, ShieldCheck, AlertCircle, Edit, Loader2 } from "lucide-react"
+import { 
+  Pencil, 
+  Trash2, 
+  UserPlus, 
+  ShieldCheck, 
+  AlertCircle, 
+  Edit, 
+  Loader2,
+  Search,
+  Filter
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import Toggle from "@/components/ui/toggle"
 import React from "react"
 import { UserAvatar } from "@/components/ui/user-avatar"
 import { OTMSLoader } from "@/components/ui/otms-loader"
+import { Pagination } from "@/components/ui/pagination"
 
 interface UserTableRowProps {
   user: User;
   handleEditClick: (user: User) => void;
-  handleDeleteUser: (userId: string) => Promise<void>;
+  handleDeleteUser: (userId: string) => void;
   handle2FAToggleAttempt: (user: User, newStatus: boolean) => void;
 }
 
@@ -119,34 +130,20 @@ const UserTableRow: React.FC<UserTableRowProps> = React.memo(
 );
 UserTableRow.displayName = 'UserTableRow';
 
-interface UsersTableBodyProps {
-  users: User[];
-  handleEditClick: (user: User) => void;
-  handleDeleteUser: (userId: string) => Promise<void>;
-  handle2FAToggleAttempt: (user: User, newStatus: boolean) => void;
-}
-
-const UsersTableBody: React.FC<UsersTableBodyProps> = React.memo(
-  ({ users, handleEditClick, handleDeleteUser, handle2FAToggleAttempt }) => (
-    <TableBody>
-      {users.map((user) => (
-        <UserTableRow
-          key={user._id}
-          user={user}
-          handleEditClick={handleEditClick}
-          handleDeleteUser={handleDeleteUser}
-          handle2FAToggleAttempt={handle2FAToggleAttempt}
-        />
-      ))}
-    </TableBody>
-  )
-);
-UsersTableBody.displayName = 'UsersTableBody';
-
 export function UserManagement() {
   const dispatch = useDispatch<AppDispatch>()
-  const { users, loading } = useSelector((state: RootState) => state.users)
+  const { users, loading, pagination } = useSelector((state: RootState) => state.users)
+  const { dashboardMetrics } = useSelector((state: RootState) => state.analytics)
   const { toast } = useToast()
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [usersPerPage, setUsersPerPage] = useState(10)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [roleFilter, setRoleFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
+  
+  // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [is2FAConfirmDialogOpen, setIs2FAConfirmDialogOpen] = useState(false)
@@ -165,9 +162,107 @@ export function UserManagement() {
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Get total users count from analytics or pagination
+  const totalUsers = dashboardMetrics?.overview?.totalUsers || pagination?.totalUsers || 0;
+
+  // Client-side filtered and paginated users
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    
+    let filtered = [...users];
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(user => 
+        user.firstName.toLowerCase().includes(searchLower) ||
+        user.lastName.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower) ||
+        `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply role filter
+    if (roleFilter && roleFilter !== "all") {
+      filtered = filtered.filter(user => user.role === roleFilter);
+    }
+    
+    // Apply status filter
+    if (statusFilter && statusFilter !== "all") {
+      filtered = filtered.filter(user => user.status === statusFilter);
+    }
+    
+    return filtered;
+  }, [users, searchTerm, roleFilter, statusFilter]);
+
+  // Paginated users for current page
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * usersPerPage;
+    const endIndex = startIndex + usersPerPage;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage, usersPerPage]);
+
+  // Calculate pagination info
+  const paginationInfo = useMemo(() => {
+    const totalFilteredUsers = filteredUsers.length;
+    const totalPages = Math.ceil(totalFilteredUsers / usersPerPage);
+    const hasNextPage = currentPage < totalPages;
+    const hasPrevPage = currentPage > 1;
+    
+    return {
+      currentPage,
+      totalPages,
+      totalUsers: totalFilteredUsers,
+      usersPerPage,
+      hasNextPage,
+      hasPrevPage
+    };
+  }, [filteredUsers.length, currentPage, usersPerPage]);
+
+  // Fetch users (only pagination, no search/filter params)
+  const fetchUsersWithPagination = useCallback(() => {
+    const params = {
+      page: 1, // Always fetch all users for client-side filtering
+      limit: 1000, // Large limit to get all users
+    };
+    
+    dispatch(fetchUsers(params));
+  }, [dispatch]);
+
   useEffect(() => {
-    dispatch(fetchUsers())
-  }, [dispatch])
+    fetchUsersWithPagination();
+  }, [fetchUsersWithPagination]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, statusFilter]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleRoleFilter = (value: string) => {
+    setRoleFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const handleStatusFilter = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setRoleFilter("all");
+    setStatusFilter("all");
+    setCurrentPage(1);
+  };
 
   const handleCreateUser = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -181,6 +276,7 @@ export function UserManagement() {
         role: "",
         status: "active"
       })
+      fetchUsersWithPagination()
       toast({
         title: "Success",
         description: "User created successfully",
@@ -192,7 +288,7 @@ export function UserManagement() {
         variant: "destructive",
       })
     }
-  }, [dispatch, formData, toast]);
+  }, [dispatch, formData, toast, fetchUsersWithPagination]);
 
   const handleUpdateUser = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -209,6 +305,7 @@ export function UserManagement() {
         role: "",
         status: "active"
       })
+      fetchUsersWithPagination()
       toast({
         title: "Success",
         description: "User updated successfully",
@@ -220,9 +317,9 @@ export function UserManagement() {
         variant: "destructive",
       })
     }
-  }, [dispatch, selectedUser, formData, toast]);
+  }, [dispatch, selectedUser, formData, toast, fetchUsersWithPagination]);
 
-  const handleDeleteUser = useCallback(async (userId: string) => {
+  const handleDeleteUser = useCallback((userId: string) => {
     setDeleteUserId(userId);
     setIsDeleteConfirmDialogOpen(true);
   }, []);
@@ -232,6 +329,24 @@ export function UserManagement() {
     setDeleteLoading(true);
     try {
       await dispatch(deleteUser(deleteUserId)).unwrap();
+      
+      // Smart page navigation after deletion
+      if (pagination) {
+        const totalUsersAfterDelete = pagination.totalUsers - 1;
+        const totalPagesAfterDelete = Math.ceil(totalUsersAfterDelete / pagination.usersPerPage);
+        
+        // If current page becomes empty and it's not the first page, go to previous page
+        if (currentPage > totalPagesAfterDelete && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        } else {
+          // Refresh current page
+          fetchUsersWithPagination();
+        }
+      } else {
+        // Fallback: just refresh
+        fetchUsersWithPagination();
+      }
+      
       toast({
         title: "Success",
         description: "User deleted successfully",
@@ -247,7 +362,7 @@ export function UserManagement() {
       setIsDeleteConfirmDialogOpen(false);
       setDeleteUserId(null);
     }
-  }, [dispatch, deleteUserId, toast]);
+  }, [dispatch, deleteUserId, toast, pagination, currentPage, fetchUsersWithPagination]);
 
   const handleEditClick = useCallback((user: User) => {
     setSelectedUser(user)
@@ -277,6 +392,7 @@ export function UserManagement() {
       } else {
         await dispatch(disable2FAForUser(user._id)).unwrap();
       }
+      fetchUsersWithPagination();
       toast({
         title: "Success",
         description: `2FA status updated to ${twoFAToggleNewStatus ? 'enabled' : 'disabled'} for ${user.firstName} ${user.lastName}.`,
@@ -292,9 +408,9 @@ export function UserManagement() {
       setIs2FAConfirmDialogOpen(false);
       setTwoFAToggleUser(null);
     }
-  }, [dispatch, twoFAToggleUser, twoFAToggleNewStatus, toast]);
+  }, [dispatch, twoFAToggleUser, twoFAToggleNewStatus, toast, fetchUsersWithPagination]);
 
-  if (loading) {
+  if (loading && !users) {
     return <OTMSLoader />;
   }
 
@@ -370,6 +486,78 @@ export function UserManagement() {
         </Dialog>
       </div>
 
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10 w-full sm:w-64"
+            />
+          </div>
+
+          {/* Role Filter */}
+          <Select value={roleFilter} onValueChange={handleRoleFilter}>
+            <SelectTrigger className="w-full sm:w-32">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="trainer">Trainer</SelectItem>
+              <SelectItem value="trainee">Trainee</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Status Filter */}
+          <Select value={statusFilter} onValueChange={handleStatusFilter}>
+            <SelectTrigger className="w-full sm:w-32">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear Filters */}
+          {(searchTerm || roleFilter !== "all" || statusFilter !== "all") && (
+            <Button variant="outline" onClick={clearFilters} size="sm">
+              Clear Filters
+            </Button>
+          )}
+        </div>
+
+        {/* Users per page */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Show:</span>
+          <Select value={usersPerPage.toString()} onValueChange={(value) => setUsersPerPage(Number(value))}>
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Results Summary */}
+      <div className="text-sm text-gray-600">
+        Showing {((paginationInfo.currentPage - 1) * paginationInfo.usersPerPage) + 1} to{" "}
+        {Math.min(paginationInfo.currentPage * paginationInfo.usersPerPage, paginationInfo.totalUsers)} of{" "}
+        {paginationInfo.totalUsers} users
+        {searchTerm || roleFilter !== "all" || statusFilter !== "all" ? " (filtered)" : ""}
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -382,14 +570,52 @@ export function UserManagement() {
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <UsersTableBody
-          users={users}
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8">
+                <div className="flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  Loading users...
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : paginatedUsers.length > 0 ? (
+            paginatedUsers.map((user) => (
+              <UserTableRow
+                key={user._id}
+                user={user}
           handleEditClick={handleEditClick}
           handleDeleteUser={handleDeleteUser}
           handle2FAToggleAttempt={handle2FAToggleAttempt}
         />
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8">
+                <div className="text-muted-foreground">
+                  {filteredUsers.length === 0 && (searchTerm || roleFilter !== "all" || statusFilter !== "all") 
+                    ? "No users match your filters" 
+                    : "No users found"}
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
       </Table>
 
+      {/* Pagination Controls */}
+      {paginationInfo.totalPages > 1 && (
+        <Pagination
+          currentPage={paginationInfo.currentPage}
+          totalPages={paginationInfo.totalPages}
+          onPageChange={handlePageChange}
+          hasNextPage={paginationInfo.hasNextPage}
+          hasPrevPage={paginationInfo.hasPrevPage}
+        />
+      )}
+
+      {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -467,6 +693,7 @@ export function UserManagement() {
         </DialogContent>
       </Dialog>
 
+      {/* 2FA Confirmation Dialog */}
       <Dialog open={is2FAConfirmDialogOpen} onOpenChange={setIs2FAConfirmDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -492,6 +719,7 @@ export function UserManagement() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteConfirmDialogOpen} onOpenChange={setIsDeleteConfirmDialogOpen}>
         <DialogContent>
           <DialogHeader>

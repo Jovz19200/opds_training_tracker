@@ -3,12 +3,36 @@ import axios from "./api";
 
 export interface Feedback {
   _id: string;
-  courseId: string;
-  userId: string;
-  comment: string;
-  rating: number;
-  createdAt: string;
-  updatedAt: string;
+  user: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+  course: {
+    _id: string;
+    title: string;
+    id: string;
+  };
+  enrollment: {
+    _id: string;
+    user: string;
+    course: string;
+    enrollmentDate: string;
+    status: string;
+    certificateIssued: boolean;
+    completionDate: string;
+  };
+  overallRating: number;
+  contentRating: number;
+  instructorRating: number;
+  facilitiesRating: number;
+  accessibilityRating: number;
+  commentContent: string;
+  commentInstructor: string;
+  commentGeneral: string;
+  suggestions: string;
+  isAnonymous: boolean;
+  submissionDate: string;
 }
 
 interface FeedbackState {
@@ -16,6 +40,12 @@ interface FeedbackState {
   selectedFeedback: Feedback | null;
   loading: boolean;
   error: string | null;
+  courseFeedbacks: Feedback[];
+  courseFeedbacksLoading: boolean;
+  courseFeedbacksError: string | null;
+  submitFeedbackLoading: boolean;
+  submitFeedbackError: string | null;
+  submitFeedbackSuccess: boolean;
 }
 
 const initialState: FeedbackState = {
@@ -23,6 +53,12 @@ const initialState: FeedbackState = {
   selectedFeedback: null,
   loading: false,
   error: null,
+  courseFeedbacks: [],
+  courseFeedbacksLoading: false,
+  courseFeedbacksError: null,
+  submitFeedbackLoading: false,
+  submitFeedbackError: null,
+  submitFeedbackSuccess: false,
 };
 
 // Get all feedback
@@ -32,7 +68,7 @@ export const fetchFeedbacks = createAsyncThunk<
   { rejectValue: { message: string } }
 >("feedback/fetchAll", async (_, { rejectWithValue }) => {
   try {
-    const response = await axios.get<{ data: Feedback[] }>("/feedback");
+    const response = await axios.get<{ success: boolean; count: number; pagination: any; data: Feedback[] }>("/feedback");
     return response.data.data;
   } catch (error: any) {
     return rejectWithValue(error.response?.data);
@@ -46,7 +82,7 @@ export const fetchFeedbackById = createAsyncThunk<
   { rejectValue: { message: string } }
 >("feedback/fetchById", async (id, { rejectWithValue }) => {
   try {
-    const response = await axios.get<{ data: Feedback }>(`/feedback/${id}`);
+    const response = await axios.get<{ success: boolean; data: Feedback }>(`/feedback/${id}`);
     return response.data.data;
   } catch (error: any) {
     return rejectWithValue(error.response?.data);
@@ -60,7 +96,7 @@ export const createFeedback = createAsyncThunk<
   { rejectValue: { message: string } }
 >("feedback/create", async ({ courseId, feedback }, { rejectWithValue }) => {
   try {
-    const response = await axios.post<{ data: Feedback }>(`/feedback/${courseId}/feedback`, feedback);
+    const response = await axios.post<{ success: boolean; data: Feedback }>(`/feedback/${courseId}/feedback`, feedback);
     return response.data.data;
   } catch (error: any) {
     return rejectWithValue(error.response?.data);
@@ -70,11 +106,24 @@ export const createFeedback = createAsyncThunk<
 // Update feedback
 export const updateFeedback = createAsyncThunk<
   Feedback,
-  { id: string; feedback: { comment: string; rating: number } },
+  { 
+    id: string; 
+    feedback: { 
+      commentContent?: string; 
+      commentInstructor?: string; 
+      commentGeneral?: string; 
+      suggestions?: string;
+      overallRating?: number;
+      contentRating?: number;
+      instructorRating?: number;
+      facilitiesRating?: number;
+      accessibilityRating?: number;
+    } 
+  },
   { rejectValue: { message: string } }
 >("feedback/update", async ({ id, feedback }, { rejectWithValue }) => {
   try {
-    const response = await axios.put<{ data: Feedback }>(`/feedback/${id}`, feedback);
+    const response = await axios.put<{ success: boolean; data: Feedback }>(`/feedback/${id}`, feedback);
     return response.data.data;
   } catch (error: any) {
     return rejectWithValue(error.response?.data);
@@ -94,6 +143,30 @@ export const deleteFeedback = createAsyncThunk<
     return rejectWithValue(error.response?.data);
   }
 });
+
+export const fetchCourseFeedbacks = createAsyncThunk<Feedback[], { courseId: string }, { rejectValue: { message: string } }>(
+  "feedback/fetchCourseFeedbacks",
+  async ({ courseId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.get<{ success: boolean; count: number; data: Feedback[] }>(`/courses/${courseId}/feedback`);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
+export const submitCourseFeedback = createAsyncThunk<Feedback, { courseId: string; feedback: any }, { rejectValue: { message: string } }>(
+  "feedback/submitCourseFeedback",
+  async ({ courseId, feedback }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post<{ success: boolean; data: Feedback }>(`/courses/${courseId}/feedback`, feedback);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
 
 const feedbackApiSlice = createSlice({
   name: "feedback",
@@ -167,6 +240,33 @@ const feedbackApiSlice = createSlice({
       .addCase(deleteFeedback.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Failed to delete feedback";
+      })
+      // Fetch Course Feedbacks
+      .addCase(fetchCourseFeedbacks.pending, (state) => {
+        state.courseFeedbacksLoading = true;
+        state.courseFeedbacksError = null;
+      })
+      .addCase(fetchCourseFeedbacks.fulfilled, (state, action) => {
+        state.courseFeedbacksLoading = false;
+        state.courseFeedbacks = action.payload;
+      })
+      .addCase(fetchCourseFeedbacks.rejected, (state, action) => {
+        state.courseFeedbacksLoading = false;
+        state.courseFeedbacksError = action.payload?.message || "Failed to fetch course feedbacks";
+      })
+      .addCase(submitCourseFeedback.pending, (state) => {
+        state.submitFeedbackLoading = true;
+        state.submitFeedbackError = null;
+        state.submitFeedbackSuccess = false;
+      })
+      .addCase(submitCourseFeedback.fulfilled, (state, action) => {
+        state.submitFeedbackLoading = false;
+        state.submitFeedbackSuccess = true;
+        state.feedbacks.push(action.payload);
+      })
+      .addCase(submitCourseFeedback.rejected, (state, action) => {
+        state.submitFeedbackLoading = false;
+        state.submitFeedbackError = action.payload?.message || "Failed to submit course feedback";
       });
   },
 });

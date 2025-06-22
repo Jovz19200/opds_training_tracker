@@ -7,6 +7,7 @@ import trainingReducer from "./api/trainingApiSlice";
 import userReducer from "./api/userApiSlice";
 import organizationReducer from "./api/organizationApiSlice";
 import feedbackReducer from "./api/feedbackApiSlice";
+import analyticsReducer from "./api/analyticsApiSlice";
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ export const store = configureStore({
     users: userReducer,
     organizations: organizationReducer,
     feedback: feedbackReducer,
+    analytics: analyticsReducer,
   },
 });
 

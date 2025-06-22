@@ -45,12 +45,18 @@ interface CourseState {
   courses: Course[];
   loading: boolean;
   error: string | null;
+  enrollLoading: boolean;
+  enrollError: string | null;
+  enrollSuccess: boolean;
 }
 
 const initialState: CourseState = {
   courses: [],
   loading: false,
   error: null,
+  enrollLoading: false,
+  enrollError: null,
+  enrollSuccess: false,
 };
 
 export const fetchTrainings = createAsyncThunk<
@@ -142,10 +148,31 @@ export const fetchTrainingsByOrganization = createAsyncThunk<
   }
 });
 
+export const enrollInCourse = createAsyncThunk<
+  { success: boolean; message?: string },
+  { courseId: string },
+  { rejectValue: { message: string } }
+>(
+  "trainings/enrollInCourse",
+  async ({ courseId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/courses/${courseId}/enroll`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
 const trainingApiSlice = createSlice({
   name: "trainings",
   initialState,
-  reducers: {},
+  reducers: {
+    resetEnrollStatus: (state) => {
+      state.enrollSuccess = false;
+      state.enrollError = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchTrainings.pending, (state) => {
@@ -230,8 +257,23 @@ const trainingApiSlice = createSlice({
       .addCase(fetchTrainingsByOrganization.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message ?? "Failed to fetch trainings by organization";
+      })
+      // Enroll in Course
+      .addCase(enrollInCourse.pending, (state) => {
+        state.enrollLoading = true;
+        state.enrollError = null;
+        state.enrollSuccess = false;
+      })
+      .addCase(enrollInCourse.fulfilled, (state) => {
+        state.enrollLoading = false;
+        state.enrollSuccess = true;
+      })
+      .addCase(enrollInCourse.rejected, (state, action) => {
+        state.enrollLoading = false;
+        state.enrollError = action.payload?.message || "Failed to enroll in course";
       });
   },
 });
 
+export const { resetEnrollStatus } = trainingApiSlice.actions;
 export default trainingApiSlice.reducer;
