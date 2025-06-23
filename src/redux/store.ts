@@ -1,22 +1,26 @@
 // src/redux/store.ts
 import { configureStore } from "@reduxjs/toolkit";
-import loginReducer from "./api/loginApiSlice";
-import organizationReducer from "./api/organizationApiSlice";
-import trainingReducer from "./api/trainingApiSlice";
-import verify2FAReducer from "./api/verify2FAApiSlice";
 import authReducer from "./reducers/authSlice";
-
+import loginReducer from "./api/loginApiSlice";
+import verify2FAReducer from "./api/verify2FAApiSlice";
+import trainingReducer from "./api/trainingApiSlice";
+import userReducer from "./api/userApiSlice";
+import organizationReducer from "./api/organizationApiSlice";
+import feedbackReducer from "./api/feedbackApiSlice";
+import analyticsReducer from "./api/analyticsApiSlice";
 
 export const store = configureStore({
   reducer: {
-    login: loginReducer,
-    organizations: organizationReducer,
-    trainings: trainingReducer,
-    verify2FA: verify2FAReducer,
     auth: authReducer,
+    login: loginReducer,
+    verify2FA: verify2FAReducer,
+    trainings: trainingReducer,
+    users: userReducer,
+    organizations: organizationReducer,
+    feedback: feedbackReducer,
+    analytics: analyticsReducer,
   },
 });
 
-// Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

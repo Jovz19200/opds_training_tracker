@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
-import { fetchTrainings } from "@/redux/api/trainingApiSlice";
+import { fetchTrainings, type Course } from "@/redux/api/trainingApiSlice";
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,15 +16,20 @@ import {
   Clock, 
   FileText, 
   Award,
-  Download
+  Download,
+  Info,
+  MapPin
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import OTMSLoader from "@/components/OTMSLoader"
+import TrainingDetailsModal from "@/components/TrainingDetailsModal";
 
 export default function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { trainings, loading } = useSelector((state: RootState) => state.trainings);
+  const { courses, loading } = useSelector((state: RootState) => state.trainings);
   const [selectedTraining, setSelectedTraining] = useState<any | null>(null);
+  const [showBrowseModal, setShowBrowseModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   useEffect(() => {
     dispatch(fetchTrainings());
@@ -38,35 +43,55 @@ export default function DashboardPage() {
     );
   }
 
-  const renderTrainingCard = (training: any) => (
-    <div
-      key={training._id}
-      className="bg-white dark:bg-slate-900 shadow-lg rounded-lg overflow-hidden flex flex-col cursor-pointer transition-transform hover:scale-[1.02]"
-      style={{ border: "none" }}
-      onClick={() => setSelectedTraining(training)}
-    >
-      {training.thumbnail?.url && (
-        <img
-          src={training.thumbnail.url}
-          alt={training.title}
-          className="w-full h-40 object-cover"
-        />
-      )}
-      <div className="p-4 flex-1 flex flex-col justify-between">
-        <h2 className="text-lg font-bold mb-1 truncate" title={training.title}>
-          {training.title}
-        </h2>
-        <p className="text-sm text-muted-foreground mb-2">
-          {training.description?.length > 30
-            ? training.description.slice(0, 15) + "..."
-            : training.description}
-        </p>
-        <div className="mt-auto pt-2 text-xs text-muted-foreground font-medium">
-          By {training.instructor?.firstName} {training.instructor?.lastName}
+  const renderTrainingCard = (course: Course) => {
+    const startDate = new Date(course.startDate);
+    const day = startDate.getDate();
+    const month = startDate.toLocaleString('default', { month: 'short' });
+    const weekday = startDate.toLocaleString('default', { weekday: 'short' });
+    return (
+      <div
+        key={course._id}
+        className="relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group min-h-[320px] flex flex-col justify-end"
+        style={{ border: "1px solid #e5e7eb" }}
+        onClick={() => setSelectedTraining(course)}
+      >
+        {/* Background Image */}
+        {course.thumbnail?.url && (
+          <img
+            src={course.thumbnail.url}
+            alt={course.title}
+            className="absolute inset-0 w-full h-full object-cover z-0 group-hover:scale-105 transition-transform"
+          />
+        )}
+        {/* Date Box */}
+        <div className="absolute top-4 left-4 bg-background/90 dark:bg-slate-900/90 rounded-lg shadow px-3 py-2 flex flex-col items-center z-10 border border-border/50">
+          <span className="text-xs font-semibold text-muted-foreground">{weekday}</span>
+          <span className="text-2xl font-bold text-foreground leading-none">{day}</span>
+          <span className="text-xs text-muted-foreground">{month}</span>
+        </div>
+        {/* Info Icon */}
+        <div className="absolute top-4 right-4 z-10">
+          <div className="bg-background/90 dark:bg-slate-900/90 rounded-full p-1.5 flex items-center justify-center shadow border border-border/50">
+            <Info className="w-4 h-4 text-muted-foreground" />
+          </div>
+        </div>
+        {/* Card Content */}
+        <div className="relative z-10 p-6 flex flex-col justify-end min-h-[180px]">
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="w-5 h-5 text-white drop-shadow" />
+            <span className="uppercase text-xs font-semibold tracking-wider text-white drop-shadow">{course.location || "Dubai"}</span>
+          </div>
+          <h2 className="text-2xl font-bold text-white drop-shadow mb-2">{course.title}</h2>
+          <Button
+            className="mt-4 w-full font-semibold text-base py-2 rounded-xl bg-background/90 dark:bg-slate-900/90 text-foreground hover:bg-background dark:hover:bg-slate-900 border border-border/50"
+            onClick={e => { e.stopPropagation(); setSelectedTraining(course); }}
+          >
+            Enroll Now
+          </Button>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -79,10 +104,10 @@ export default function DashboardPage() {
               <p className="text-muted-foreground">Welcome back!</p>
             </div>
             <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setShowCalendarModal(true)}>
                 <Calendar className="mr-2 h-4 w-4" /> View Calendar
               </Button>
-              <Button size="sm">
+              <Button size="sm" onClick={() => setShowBrowseModal(true)}>
                 <BookOpen className="mr-2 h-4 w-4" /> Browse Trainings
               </Button>
             </div>
@@ -106,8 +131,8 @@ export default function DashboardPage() {
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">7</div>
-                <p className="text-xs text-muted-foreground">3 certificates earned</p>
+                <div className="text-2xl font-bold">3</div>
+                <p className="text-xs text-muted-foreground">0 certificates earned</p>
               </CardContent>
             </Card>
             <Card>
@@ -116,8 +141,8 @@ export default function DashboardPage() {
                 <Award className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">85%</div>
-                <p className="text-xs text-muted-foreground">Based on 7 completed courses</p>
+                <div className="text-2xl font-bold">70%</div>
+                <p className="text-xs text-muted-foreground">Based on 3 completed courses</p>
               </CardContent>
             </Card>
             <Card>
@@ -126,7 +151,7 @@ export default function DashboardPage() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-bold">Tomorrow, 10:00 AM</div>
+                <div className="text-xl font-bold">Tomorrow, 8:00 AM</div>
                 <p className="text-xs text-muted-foreground">Digital Accessibility Training</p>
               </CardContent>
             </Card>
@@ -142,19 +167,19 @@ export default function DashboardPage() {
             
             <TabsContent value="upcoming" className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {trainings.filter(t => t.status === "upcoming").map(renderTrainingCard)}
+                {courses.filter(t => t.status === "scheduled").map(renderTrainingCard)}
               </div>
             </TabsContent>
             
             <TabsContent value="scheduled" className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {trainings.filter(t => t.status === "scheduled").map(renderTrainingCard)}
+                {courses.filter(t => t.status === "scheduled").map(renderTrainingCard)}
               </div>
             </TabsContent>
             
             <TabsContent value="completed" className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {trainings.filter(t => t.status === "completed").map(renderTrainingCard)}
+                {courses.filter(t => t.status === "completed").map(renderTrainingCard)}
               </div>
             </TabsContent>
           </Tabs>
@@ -166,7 +191,7 @@ export default function DashboardPage() {
               <Button variant="ghost" size="sm">View All</Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {trainings.map((course, index) => (
+              {courses.map((course, index) => (
                 <Card key={index} className="relative overflow-hidden border dark:border-slate-800 bg-background p-2 dark:bg-slate-900/10 backdrop-blur-sm dark:backdrop-blur-md hover:dark:border-slate-700/50 transition-colors">
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -194,47 +219,59 @@ export default function DashboardPage() {
         </div>
         {/* Modal for training details */}
         {selectedTraining && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="relative w-full max-w-2xl h-[90vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
-              <button
-                className="absolute top-4 right-4 text-3xl font-bold text-gray-400 hover:text-gray-700 dark:hover:text-white z-10"
-                onClick={() => setSelectedTraining(null)}
-                aria-label="Close"
-              >
-                ×
-              </button>
-              <div className="overflow-y-auto p-8 pt-16 flex-1">
-                {selectedTraining.thumbnail?.url && (
-                  <img
-                    src={selectedTraining.thumbnail.url}
-                    alt={selectedTraining.title}
-                    className="w-full h-56 object-cover rounded mb-6"
-                  />
-                )}
-                <h2 className="text-3xl font-bold mb-3">{selectedTraining.title}</h2>
-                <p className="mb-4 text-muted-foreground text-lg">{selectedTraining.description}</p>
-                <div className="mb-3 text-base">
-                  <span className="font-medium">Instructor:</span> {selectedTraining.instructor?.firstName} {selectedTraining.instructor?.lastName}
-                </div>
-                <div className="mb-3 text-base">
-                  <span className="font-medium">Start:</span> {new Date(selectedTraining.startDate).toLocaleString()}
-                </div>
-                <div className="mb-3 text-base">
-                  <span className="font-medium">End:</span> {new Date(selectedTraining.endDate).toLocaleString()}
-                </div>
-                <div className="mb-3 text-base">
-                  <span className="font-medium">Location:</span> {selectedTraining.isVirtual ? (
-                    <a href={selectedTraining.virtualMeetingLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">Virtual Link</a>
-                  ) : (
-                    selectedTraining.location
-                  )}
-                </div>
-                <div className="mb-3 text-base">
-                  <span className="font-medium">Capacity:</span> {selectedTraining.capacity}
-                </div>
-                <div className="mb-3 text-base">
-                  <span className="font-medium">Accessibility:</span> {selectedTraining.accessibilityFeatures?.join(", ") || "None"}
-                </div>
+          <TrainingDetailsModal
+            training={selectedTraining}
+            onClose={() => setSelectedTraining(null)}
+          />
+        )}
+        {/* Browse Trainings Sidebar Modal */}
+        {showBrowseModal && (
+          <div className="fixed inset-0 z-50 flex">
+            <div className="flex-1 bg-black/40" onClick={() => setShowBrowseModal(false)} />
+            <div className="relative w-full max-w-md h-full bg-white dark:bg-slate-900 shadow-2xl p-6 flex flex-col animate-slide-in-right overflow-y-auto">
+              <button className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-700 dark:hover:text-white" onClick={() => setShowBrowseModal(false)}>&times;</button>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><BookOpen className="w-6 h-6 text-primary" /> All Trainings</h2>
+              <div className="flex flex-col gap-4">
+                {courses.map((course) => (
+                  <div
+                    key={course._id}
+                    className="relative rounded-xl overflow-hidden shadow group cursor-pointer bg-gradient-to-br from-primary/10 to-white dark:from-primary/20 dark:to-slate-900 border border-gray-200 dark:border-slate-800 hover:scale-[1.01] transition"
+                    onClick={() => { setSelectedTraining(course); setShowBrowseModal(false); }}
+                  >
+                    {course.thumbnail?.url && (
+                      <img
+                        src={course.thumbnail.url}
+                        alt={course.title}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:opacity-80 transition"
+                      />
+                    )}
+                    <div className="relative z-10 p-4 flex flex-col gap-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MapPin className="w-4 h-4 text-primary" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-primary">{course.location || "Location"}</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 truncate">{course.title}</h3>
+                      <div className="text-xs text-muted-foreground truncate">{course.instructor?.firstName} {course.instructor?.lastName}</div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">{new Date(course.startDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Calendar Modal (Placeholder) */}
+        {showCalendarModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 animate-fade-in border border-black/10 dark:border-white/10">
+              <button className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-700 dark:hover:text-white" onClick={() => setShowCalendarModal(false)}>&times;</button>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><Calendar className="w-6 h-6 text-primary" /> Training Calendar</h2>
+              <div className="flex items-center justify-center h-64 text-muted-foreground">
+                {/* Placeholder for calendar component */}
+                <span>Calendar with highlighted training start dates coming soon...</span>
               </div>
             </div>
           </div>

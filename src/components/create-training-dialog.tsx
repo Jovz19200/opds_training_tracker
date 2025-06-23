@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { BookOpen, Upload, X } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
+import { useAuth } from "@/lib/hooks/useAuth"
 
 interface Training {
     title: string
@@ -33,13 +34,23 @@ interface Training {
     isVirtual: boolean
     virtualMeetingLink?: string
     accessibilityFeatures: string[]
+    organization: string
+    materials: {
+        title: string
+        fileUrl: string
+        fileType: string
+        uploadDate: string
+    }[]
+    prerequisites: string[]
+    tags: string[]
 }
 
 interface CreateTrainingDialogProps {
-    onCreateTraining: (training: Training, thumbnailFile?: File) => void
+    onCreateTraining: (newTraining: Omit<Training, "_id" | "instructor" | "status" | "createdAt">, thumbnailFile?: File) => void
 }
 
 export function CreateTrainingDialog({ onCreateTraining }: CreateTrainingDialogProps) {
+    const { user } = useAuth()
     const [open, setOpen] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
@@ -58,8 +69,21 @@ export function CreateTrainingDialog({ onCreateTraining }: CreateTrainingDialogP
         location: "",
         isVirtual: false,
         virtualMeetingLink: "",
-        accessibilityFeatures: []
+        accessibilityFeatures: [],
+        organization: user?.organization || "6814cafa297e8ab73f23f5fd",
+        materials: [],
+        prerequisites: [],
+        tags: []
     })
+
+    useEffect(() => {
+        if (user?.organization) {
+            setFormData(prev => ({
+                ...prev,
+                organization: user.organization 
+            }));
+        }
+    }, [user]);
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -98,9 +122,15 @@ export function CreateTrainingDialog({ onCreateTraining }: CreateTrainingDialogP
                 location: "",
                 isVirtual: false,
                 virtualMeetingLink: "",
-                accessibilityFeatures: []
+                accessibilityFeatures: [],
+                organization: user?.organization || "",
+                materials: [],
+                prerequisites: [],
+                tags: []
             })
             handleRemoveImage()
+        } catch (error) {
+            console.error('Error creating training:', error)
         } finally {
             setUploading(false)
         }

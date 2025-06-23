@@ -29,18 +29,20 @@ export const fetchUser = createAsyncThunk(
 );
 
 interface User {
-  id: string
-  email: string
-  role: string
-  name: string
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  organization: string;
 }
 
 interface AuthState {
-  user: User | null
-  loading: boolean
-  data: any[]
-  error: string | null
-  userInfo: any
+  user: User | null;
+  loading: boolean;
+  data: any[];
+  error: string | null;
+  userInfo: any;
 }
 
 const initialState: AuthState = {
@@ -77,7 +79,8 @@ const authSlice = createSlice({
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload;
+        state.user = action.payload;
+        state.userInfo = action.payload;
         if (typeof window !== 'undefined') {
           localStorage.setItem("userInfo", JSON.stringify(action.payload));
         }

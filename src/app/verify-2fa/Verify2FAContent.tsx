@@ -56,7 +56,14 @@ export default function Verify2FAContent() {
         })
 
         // Update Redux state
-        dispatch(setUser(user))
+        dispatch(setUser({
+          _id: user.id,
+          email: user.email,
+          role: user.role,
+          firstName: user.name?.split(" ")[0] || "",
+          lastName: user.name?.split(" ")[1] || "",
+          organization: (user as any).organization || "",
+        }))
 
         // Show loader and redirect
         setShowOTMSLoader(true)
