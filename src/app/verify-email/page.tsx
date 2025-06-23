@@ -36,6 +36,8 @@ function VerifyEmailContent() {
         const result = await dispatch(verifyEmail({ token }))
         if (verifyEmail.fulfilled.match(result)) {
           setSuccess(true)
+          // Email verification successful - no need to set user state
+          // User will need to log in separately
         } else {
           setError(result.payload as string)
         }

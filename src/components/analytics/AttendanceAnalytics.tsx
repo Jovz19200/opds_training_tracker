@@ -14,7 +14,7 @@ export const AttendanceAnalytics: React.FC = () => {
   const { attendanceAnalytics, loading } = useSelector((state: RootState) => state.analytics);
 
   useEffect(() => {
-    dispatch(fetchAttendanceAnalytics());
+    dispatch(fetchAttendanceAnalytics({}));
   }, [dispatch]);
 
   if (loading) {

@@ -14,7 +14,7 @@ export const CertificateAnalytics: React.FC = () => {
   const { certificateAnalytics, loading } = useSelector((state: RootState) => state.analytics);
 
   useEffect(() => {
-    dispatch(fetchCertificateAnalytics());
+    dispatch(fetchCertificateAnalytics({}));
   }, [dispatch]);
 
   if (loading) {
@@ -172,7 +172,7 @@ export const CertificateAnalytics: React.FC = () => {
                       {certificate.user?.firstName || 'Unknown'} {certificate.user?.lastName || 'User'}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {certificate.training?.title || certificate.course?.title || 'Unknown Training'}
+                      {certificate.course?.title || certificate.course?.title || 'Unknown Training'}
                     </p>
                     {certificate.user?.hasDisability && (
                       <p className="text-xs text-orange-600">

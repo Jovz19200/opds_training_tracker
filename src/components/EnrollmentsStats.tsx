@@ -82,7 +82,7 @@ const EnrollmentsStats: React.FC<EnrollmentsStatsProps> = ({ courseId, compact }
         {enrollSuccess ? "Enrolled" : enrollLoading ? "Enrolling..." : "Enroll"}
       </Button>
       {enrollError && <div className="text-destructive text-center mt-2 flex items-center justify-center gap-2"><AlertCircle className="w-4 h-4" />{enrollError}</div>}
-      {enrollSuccess && <div className="text-green-600 dark:text-green-400 text-center mt-2 flex items-center justify-center gap-2"><CheckCircle className="w-4 h-4" />Successfully enrolled!<br>Check your email for the confirmation.</br></div>}
+      {enrollSuccess && <div className="text-green-600 dark:text-green-400 text-center mt-2 flex items-center justify-center gap-2"><CheckCircle className="w-4 h-4" />Successfully enrolled!<br/>Check your email for the confirmation.</div>}
     </div>
   );
 };

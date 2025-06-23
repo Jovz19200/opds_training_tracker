@@ -64,15 +64,15 @@ export default function DashboardPage() {
           />
         )}
         {/* Date Box */}
-        <div className="absolute top-4 left-4 bg-white/90 rounded-lg shadow px-3 py-2 flex flex-col items-center z-10">
-          <span className="text-xs font-semibold text-gray-500">{weekday}</span>
-          <span className="text-2xl font-bold text-gray-900 leading-none">{day}</span>
-          <span className="text-xs text-gray-500">{month}</span>
+        <div className="absolute top-4 left-4 bg-background/90 dark:bg-slate-900/90 rounded-lg shadow px-3 py-2 flex flex-col items-center z-10 border border-border/50">
+          <span className="text-xs font-semibold text-muted-foreground">{weekday}</span>
+          <span className="text-2xl font-bold text-foreground leading-none">{day}</span>
+          <span className="text-xs text-muted-foreground">{month}</span>
         </div>
         {/* Info Icon */}
         <div className="absolute top-4 right-4 z-10">
-          <div className="bg-white/90 rounded-full p-1.5 flex items-center justify-center shadow">
-            <Info className="w-4 h-4 text-gray-500" />
+          <div className="bg-background/90 dark:bg-slate-900/90 rounded-full p-1.5 flex items-center justify-center shadow border border-border/50">
+            <Info className="w-4 h-4 text-muted-foreground" />
           </div>
         </div>
         {/* Card Content */}
@@ -83,7 +83,7 @@ export default function DashboardPage() {
           </div>
           <h2 className="text-2xl font-bold text-white drop-shadow mb-2">{course.title}</h2>
           <Button
-            className="mt-4 w-full font-semibold text-base py-2 rounded-xl bg-white/90 text-gray-900 hover:bg-white"
+            className="mt-4 w-full font-semibold text-base py-2 rounded-xl bg-background/90 dark:bg-slate-900/90 text-foreground hover:bg-background dark:hover:bg-slate-900 border border-border/50"
             onClick={e => { e.stopPropagation(); setSelectedTraining(course); }}
           >
             Enroll Now

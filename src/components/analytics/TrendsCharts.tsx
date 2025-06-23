@@ -27,11 +27,11 @@ export const TrendsCharts: React.FC = () => {
   } = useSelector((state: RootState) => state.analytics);
 
   useEffect(() => {
-    dispatch(fetchEnrollmentTrends());
-    dispatch(fetchFeedbackTrends());
-    dispatch(fetchUserGrowth());
-    dispatch(fetchCompletionRates());
-    dispatch(fetchCoursePerformance());
+    dispatch(fetchEnrollmentTrends({}));
+    dispatch(fetchFeedbackTrends({}));
+    dispatch(fetchUserGrowth({}));
+    dispatch(fetchCompletionRates({}));
+    dispatch(fetchCoursePerformance({}));
   }, [dispatch]);
 
   const getTrendIcon = (change?: number) => {

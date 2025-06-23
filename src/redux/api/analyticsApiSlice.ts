@@ -218,6 +218,14 @@ export interface EnrollmentStats {
   enrollmentRate: number;
 }
 
+export interface ReportFile {
+  filename: string;
+  createdAt: string;
+  size: number;
+  downloadUrl: string;
+  previewUrl: string;
+}
+
 interface AnalyticsState {
   dashboardMetrics: DashboardMetrics | null;
   enrollmentTrends: EnrollmentTrends[];
@@ -236,6 +244,7 @@ interface AnalyticsState {
   enrollmentStats: EnrollmentStats | null;
   enrollmentStatsLoading: boolean;
   enrollmentStatsError: string | null;
+  reportFiles: ReportFile[];
 }
 
 const initialState: AnalyticsState = {
@@ -256,6 +265,7 @@ const initialState: AnalyticsState = {
   enrollmentStats: null,
   enrollmentStatsLoading: false,
   enrollmentStatsError: null,
+  reportFiles: [],
 };
 
 // Dashboard & Trends
@@ -442,6 +452,48 @@ export const fetchEnrollmentStats = createAsyncThunk<EnrollmentStats, { courseId
   }
 );
 
+export const getReportFiles = createAsyncThunk<ReportFile[], void, { rejectValue: ErrorResponse }>(
+  "analytics/getReportFiles",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("/analytics/reports/files");
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
+export const previewReportFile = createAsyncThunk<Blob, string, { rejectValue: string }>(
+  'analytics/previewReportFile',
+  async (filename, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/analytics/reports/preview/${filename}`, {
+        responseType: 'blob',
+        withCredentials: true,
+      });
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue('File not found or cannot preview');
+    }
+  }
+);
+
+export const downloadReportFile = createAsyncThunk<Blob, string, { rejectValue: string }>(
+  'analytics/downloadReportFile',
+  async (filename, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/analytics/reports/download/${filename}`, {
+        responseType: 'blob',
+        withCredentials: true,
+      });
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue('File not found or cannot download');
+    }
+  }
+);
+
 const analyticsApiSlice = createSlice({
   name: "analytics",
   initialState,
@@ -587,6 +639,9 @@ const analyticsApiSlice = createSlice({
       .addCase(fetchEnrollmentStats.rejected, (state, action) => {
         state.enrollmentStatsLoading = false;
         state.enrollmentStatsError = action.payload?.message || "Failed to fetch enrollment stats";
+      })
+      .addCase(getReportFiles.fulfilled, (state, action) => {
+        state.reportFiles = action.payload;
       });
   },
 });
